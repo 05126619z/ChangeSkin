@@ -59,6 +59,7 @@
 		</RequiredFilesToCopy>
 		<RequiredFoldersToCopy>
 			Textures;
+			WoundView;
 		</RequiredFoldersToCopy>
 	</PropertyGroup>
 
