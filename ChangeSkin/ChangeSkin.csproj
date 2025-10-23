@@ -38,7 +38,7 @@
 		</Reference>
 
 		<Reference Include="ScavLib">
-			<HintPath>$(BepInExDir)/plugins/ScavLib/ScavLib.dll</HintPath>
+			<HintPath>./redist/ScavLib.dll</HintPath>
 		</Reference>
 
 		<Content Include="Textures\**"> 
@@ -51,12 +51,14 @@
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="redist\" />
+	</ItemGroup>
+
 	<PropertyGroup>
 		<RequiredFilesToCopy>
 			$(AssemblyName).dll;
-			$(AssemblyName).pdb;
 			ScavLib.dll;
-			ScavLib.pdb;
 		</RequiredFilesToCopy>
 		<RequiredFoldersToCopy>
 			Textures;
