@@ -20,9 +20,17 @@ namespace ChangeSkin
             orig(self);
             if (Config.replaceBody)
             {
-                self.StartCoroutine(ChangeBody.ReplaceTextures());
-                //ReplaceSounds();
-                //ReplaceEyes();
+                self.StartCoroutine(ChangeBody.ReplaceSprites());
+            }
+        }
+
+        public delegate void orig_WoundView_Update(WoundView self);
+        public static void WoundView_Update(orig_WoundView_Update orig, WoundView self)
+        {
+            orig(self);
+            if (Config.replaceWoundView)
+            {
+                self.StartCoroutine(ChangeWoundView.ReplaceSprites());
             }
         }
     }

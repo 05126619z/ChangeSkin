@@ -11,34 +11,6 @@ namespace ChangeSkin
 {
     internal static class Utils
     {
-        static IEnumerator ReplaceSprite(GameObject gameobject, Sprite sprite)
-        {
-            try
-            {
-                SpriteRenderer spriteRenderer = gameobject.GetComponent<SpriteRenderer>();
-                if (spriteRenderer == null)
-                {
-                    throw new Exception($"No SpriteRenderer in {gameobject.name}");
-                }
-                if (spriteRenderer.sprite.name == null)
-                {
-                    throw new Exception($"{gameobject.name} SpriteRenderer sprite contains no name");
-                }
-                if (sprite.name == null)
-                {
-                    throw new Exception($"Sprite name for {gameobject.name} cannot be empty");
-                }
-                spriteRenderer.sprite = sprite;
-                //And just to be sure...
-                spriteRenderer.sprite.name = sprite.name;
-                yield break;
-            }
-            catch (Exception e)
-            {
-                Plugin.Logger.LogError(e);
-                yield break;
-            }
-        }
         public static Texture2D LoadTexture(string path)
         {
             try
@@ -54,6 +26,7 @@ namespace ChangeSkin
                 {
                     throw new Exception($"Failed to load texture from {path}. Maybe it's not a texture?");
                 }
+                newTexture.filterMode = FilterMode.Point;
                 return newTexture;
             }
             catch (Exception e)

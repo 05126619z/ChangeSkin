@@ -1,0 +1,95 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Release
+
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0):'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes:'
+        required: true
+        type: string
+      is_draft:
+        description: 'Is this a draft?'
+        required: false
+        type: boolean
+        default: false
+      is_prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+  
+env:
+  GAME_FILE: ${{ vars.GAME_FILE }}
+  GAME_NAME: ${{ vars.GAME_NAME }}
+  MOD_NAME: ${{ vars.MOD_NAME }}
+      
+jobs:
+  setup:
+    runs-on: windows-2022
+    environment: workflows
+    outputs:
+      game-path: ${{ steps.setup.outputs.game-path }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download and unpack game
+      id: path
+      shell: pwsh
+      run: |
+        $request = Invoke-WebRequest https://itch.io/api/1/${{ secrets.ITCHTKN }}/upload/$env:GAME_FILE/download
+        echo $request
+        $jsonlink = ConvertFrom-Json $request
+        Invoke-WebRequest $jsonlink.url -OutFile "$env:GAME_NAME.zip"
+        mkdir $env:GAME_NAME
+        Expand-Archive -Path "$env:GAME_NAME.zip" -DestinationPath ./$env:GAME_NAME
+        rm ".\$env:GAME_NAME.zip" -r -fo
+    - name: Upload game files
+      uses: actions/upload-artifact@v4
+      with:
+        name: game-files
+        path: ${{ env.GAME_NAME }}
+
+  build:
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, x86]
+    runs-on: windows-2022
+    environment: workflows
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download game files
+      uses: actions/download-artifact@v4
+      with:
+        name: game-files
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build for ${{ matrix.platform }}
+      run: |
+        dotnet build --no-restore --configuration Release -p:Platform=${{ matrix.platform }} -p:BaseGamePath="${{ github.workspace }}/${{ env.GAME_NAME }}"
+    - name: Set the mod path variable
+      run: |
+        cd ${{ github.workspace }}\${{ env.GAME_NAME }}\BepInEx\plugins\${{ env.MOD_NAME }}
+        dir
+        echo "MOD_PATH=$pwd" >> $env:GITHUB_ENV
+    - name: Create Release for 
+      run: |
+        Compress-Archive -Path ${{ env.MOD_PATH }}\* -DestinationPath ".\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip"
+        gh release create ${{ github.event.inputs.version }} 
+        gh release upload ${{ github.event.inputs.version }} .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
+        gh release edit ${{ github.event.inputs.version }} -n ${{ github.event.inputs.release_notes }}
+        if ('${{ github.event.inputs.is_draft }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --draft}
+        if ('${{ github.event.inputs.is_prerelease }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --prerelease}
+      env:
+        GH_TOKEN: ${{ github.token }}

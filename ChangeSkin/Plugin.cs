@@ -24,7 +24,12 @@ namespace ChangeSkin
                     typeof(Body).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance),
                     typeof(Patches).GetMethod(nameof(Patches.Body_Update))
                     );
+                    Hook a2 = new Hook(
+                    typeof(WoundView).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance),
+                    typeof(Patches).GetMethod(nameof(Patches.WoundView_Update))
+                    );
                 Logger.LogInfo(a1);
+                Logger.LogInfo(a2);
             }
             catch (Exception e)
             {

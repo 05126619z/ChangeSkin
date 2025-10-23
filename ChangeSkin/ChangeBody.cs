@@ -18,6 +18,7 @@ namespace ChangeSkin
             Config.replaceBody = true;
             PreloadBodyTextures();
             PreloadBodySprites();
+            SaveOriginalSprites();
             ChangeFacialExpression.SwapFacialExpression(PlayerCamera.main.body.GetComponentInChildren<FacialExpression>());
         }
         internal static void ToggleOff()
@@ -28,6 +29,7 @@ namespace ChangeSkin
             ChangeFacialExpression.UnSwapFacialExpression(PlayerCamera.main.body.GetComponentInChildren<FacialExpression>());
             TextureStorage.bodyTextures.Clear();
             TextureStorage.bodySprites.Clear();
+            TextureStorage.originalBodySprites.Clear();
         }
         static string[] filenames =
         {
@@ -116,12 +118,8 @@ namespace ChangeSkin
                 }
             }
         }
-        internal static IEnumerator ReplaceTextures()
+        internal static IEnumerator ReplaceSprites()
         {
-            if (TextureStorage.originalBodySprites.Count == 0) 
-            {
-                SaveOriginalSprites();
-            }
             foreach (Sprite sprite in TextureStorage.bodySprites.Values)
             {
                 foreach (SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>())
