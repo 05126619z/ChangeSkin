@@ -81,4 +81,22 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')" />
 	</Target>
+
+
+
+	<Target Name="CopyOutputDllsToPluginsFolder" Condition="'$(Configuration)'=='RELEASE'" AfterTargets="AfterBuild">
+		<MakeDir Directories="$(BepInExDir)/plugins/$(PluginDirName)" />
+		<CombinePath BasePath="$(OutDir)" Paths="$(RequiredFilesToCopy)">
+			<Output TaskParameter="CombinedPaths" ItemName="RequiredFilesToCopy_Combined" />
+		</CombinePath>
+		<Copy SourceFiles="@(RequiredFilesToCopy_Combined)" DestinationFolder="$(BepInExDir)/plugins/$(PluginDirName)" />
+	</Target>
+
+	<Target Name="CopyFoldersToPluginsFolder" Condition="'$(Configuration)'=='RELEASE'" AfterTargets="AfterBuild">
+		<ItemGroup>
+			<RequiredFolders Include="$(RequiredFoldersToCopy.Split(';'))" />
+			<FilesToCopy Include="%(RequiredFolders.Identity)\**\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')" />
+	</Target>
 </Project>
