@@ -14,6 +14,8 @@ This mod allows you to easialy replace skin in Scav without tampering with game 
 3. Unpack mod into `CasualtiesUnknownDemo/BepInEx/plugins/ChangeSkin` folder
 4. Enjoy!
 ## Usage
+To use your own skin you have to replace files `Textures/Body` or `Textures/WoundView` folder
+
 1. Type `skin 1` to activate skin replacement 
 2. Type `skin 0` to deactivate skin replacement
 3. Type `skin reload` to quickly reload skin from folder
