@@ -41,7 +41,7 @@
 			<HintPath>./redist/ScavLib.dll</HintPath>
 		</Reference>
 
-		<Content Include="Textures\**"> 
+		<Content Include="robot\Textures\**"> 
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
 		</Content>
 
@@ -61,8 +61,7 @@
 			ScavLib.dll;
 		</RequiredFilesToCopy>
 		<RequiredFoldersToCopy>
-			Textures;
-			WoundView;
+			robot;
 		</RequiredFoldersToCopy>
 	</PropertyGroup>
 

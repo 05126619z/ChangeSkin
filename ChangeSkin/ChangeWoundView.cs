@@ -65,7 +65,7 @@ namespace ChangeSkin
             {
                 try
                 {
-                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/Textures/WoundView/{filename}.png"); // Hacky concat! Hah!
+                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{Config.skinName}/Textures/WoundView/{filename}.png"); // Hacky concat! Hah!
                     TextureStorage.woundViewTextures.Add(filename, Utils.LoadTexture(path));
                     TextureStorage.woundViewTextures[filename].name = filename;
                     TextureStorage.woundViewTextures[filename].filterMode = FilterMode.Point;

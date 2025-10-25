@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,29 +12,54 @@ namespace ChangeSkin
     {
         public static bool replaceBody = false;
         public static bool replaceWoundView = false;
+        public static string skinName;
         public static string ToggleReplacement(string[] args) // For console
         {
-
             if (args.Length == 0)
             {
-                return "1 to toggle ON, 0 to toggle OFF, reload to reload";
+                return "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
             }
-            if (args[0] == "1")
+            switch (args[0])
             {
-                Config.ToggleOn();
-                return "Texture replacement ON";
+                case "enable":
+                    if (skinName == null)
+                    {
+                        return "Select skin first";
+                    }
+                    Config.ToggleOn();
+                    return "Texture replacement ON";
+                case "disable":
+                    if (skinName == null)
+                    {
+                        return "Select skin first";
+                    }
+                    Config.ToggleOff();
+                    return "Texture replacement OFF";
+                case "reload":
+                    if (skinName == null)
+                    {
+                        return "Select skin first";
+                    }
+                    Config.Reload();
+                    return "Textures reloaded";
+                case "select":
+
+                    if (args[1] == null)
+                    {
+                        return "Usage: skin select <Folder with skin>";
+                    }
+                    if (Directory.Exists(string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{args[1]}")))
+                    {
+                        skinName = args[1];
+                        return $"{skinName} selected";
+                    }
+                    else
+                    {
+                        return $"{skinName} not found";
+                    }
+                default:
+                    return "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
             }
-            else if (args[0] == "0")
-            {
-                Config.ToggleOff();
-                return "Texture replacement OFF";
-            }
-            else if (args[0] == "reload")
-            {
-                Config.Reload();
-                return "Textures reloaded";
-            }
-            return "1 to toggle ON, 0 to toggle OFF, reload to reload";
         }
         internal static void ToggleOn()
         {

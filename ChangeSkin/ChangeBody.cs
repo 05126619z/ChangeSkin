@@ -73,7 +73,7 @@ namespace ChangeSkin
             {
                 try
                 {
-                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/Textures/Body/{filename}.png"); // Hacky concat! Hah!
+                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{Config.skinName}/Textures/Body/{filename}.png"); // Hacky concat! Hah!
                     TextureStorage.bodyTextures.Add(filename, Utils.LoadTexture(path));
                     TextureStorage.bodyTextures[filename].name = filename;
                     TextureStorage.bodyTextures[filename].filterMode = FilterMode.Point;
