@@ -80,12 +80,12 @@ jobs:
         dotnet build --no-restore --configuration Release -p:Platform=${{ matrix.platform }} -p:BaseGamePath="${{ github.workspace }}/${{ env.GAME_NAME }}"
     - name: Set the mod path variable
       run: |
-        cd ${{ github.workspace }}\${{ env.GAME_NAME }}\BepInEx\plugins\${{ env.MOD_NAME }}
+        cd ${{ github.workspace }}\${{ env.GAME_NAME }}\BepInEx\plugins
         dir
-        echo "MOD_PATH=$pwd" >> $env:GITHUB_ENV
+        echo "MODS_PATH=$pwd" >> $env:GITHUB_ENV
     - name: Create Release for 
       run: |
-        Compress-Archive -Path ${{ env.MOD_PATH }}\* -DestinationPath ".\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip"
+        Compress-Archive -Path ${{ env.MODS_PATH }}\* -DestinationPath ".\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip"
         gh release create ${{ github.event.inputs.version }} 
         gh release upload ${{ github.event.inputs.version }} .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
         gh release edit ${{ github.event.inputs.version }} -n ${{ github.event.inputs.release_notes }}

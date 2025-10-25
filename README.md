@@ -11,13 +11,14 @@ This mod allows you to easialy replace skin in Scav without tampering with game 
 ## Installation
 1. Download and install BepInEx From official repository: https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.4
 2. Launch game once
-3. Unpack mod into `CasualtiesUnknownDemo/BepInEx/plugins/ChangeSkin` folder
+3. Unpack mod into `CasualtiesUnknownDemo/BepInEx/plugins` folder
 4. Enjoy!
 ## Usage
-To use your own skin you have to replace files `Textures/Body` or `Textures/WoundView` folder
+To use your own skin you have to duplicate and rename the `robot` folder, and replace all the textures in it with the new ones
 
-1. Type `skin 1` to activate skin replacement 
-2. Type `skin 0` to deactivate skin replacement
-3. Type `skin reload` to quickly reload skin from folder
+1. Type `skin enable` to activate skin replacement 
+2. Type `skin disable` to deactivate skin replacement
+3. Type `skin select <skin name>` to select one of your skins
+4. Type `skin reload` to quickly reload skin from folder
 ## Special thanks
 Special thanks to @speed_buump for skin textures
