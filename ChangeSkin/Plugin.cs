@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace ChangeSkin
 {
-    [BepInPlugin("05126619z.changeskin", "ChangeSkin", "1.1.0")]
+    [BepInPlugin("05126619z.changeskin", "ChangeSkin", "1.2.0")]
     public partial class Plugin : BaseUnityPlugin
     {
         internal static new ManualLogSource Logger;
