@@ -15,11 +15,11 @@ namespace ChangeSkin
         public static string skinName;
         public static string ToggleReplacement(string[] args) // For console
         {
-            if (args.Length == 0)
+            if (args.Length == 1)
             {
                 return "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
             }
-            switch (args[0])
+            switch (args[1])
             {
                 case "enable":
                     if (skinName == null)
@@ -44,13 +44,13 @@ namespace ChangeSkin
                     return "Textures reloaded";
                 case "select":
 
-                    if (args[1] == null)
+                    if (args[2] == null)
                     {
                         return "Usage: skin select <Folder with skin>";
                     }
-                    if (Directory.Exists(string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{args[1]}")))
+                    if (Directory.Exists(string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{args[2]}")))
                     {
-                        skinName = args[1];
+                        skinName = args[2];
                         return $"{skinName} selected";
                     }
                     else
@@ -64,20 +64,20 @@ namespace ChangeSkin
         internal static void ToggleOn()
         {
             ChangeBody.ToggleOn();
-            ChangeWoundView.ToggleOn();
+            // ChangeWoundView.ToggleOn();
         }
         internal static void ToggleOff()
         {
             ChangeBody.ToggleOff();
-            ChangeWoundView.ToggleOff();
+            // ChangeWoundView.ToggleOff();
         }
         internal static void Reload()
         {
 
             ChangeBody.ToggleOff();
-            ChangeWoundView.ToggleOff();
+            // ChangeWoundView.ToggleOff();
             ChangeBody.ToggleOn();
-            ChangeWoundView.ToggleOn();
+            // ChangeWoundView.ToggleOn();
         }
     }
 }

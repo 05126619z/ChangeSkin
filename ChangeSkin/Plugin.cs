@@ -35,7 +35,10 @@ namespace ChangeSkin
             {
                 Logger.LogError(e);
             }
-            ScavLib.Commands.ConsoleManager.AddCommand("skin", args => ChangeSkin.Config.ToggleReplacement(args));
+            ConsoleScript.Commands.Add(new Command("skin", "Control command for ChangeSkin", delegate(string[] args)
+            {
+                Logger.LogInfo(ChangeSkin.Config.ToggleReplacement(args));
+            }, null, Array.Empty<ValueTuple<string, string>>()));
 
             Logger.LogInfo($"Plugin ChangeSkin is loaded!");
         }

@@ -41,7 +41,7 @@
 			<HintPath>./redist/ScavLib.dll</HintPath>
 		</Reference>
 
-		<Content Include="robot\Textures\**"> 
+		<Content Include="robot/Textures/**"> 
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
 		</Content>
 
@@ -52,20 +52,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="redist\" />
+	  <Folder Include="redist/" />
 	</ItemGroup>
 
 	<PropertyGroup>
 		<RequiredFilesToCopy>
 			$(AssemblyName).dll;
-			ScavLib.dll;
 		</RequiredFilesToCopy>
 		<RequiredFoldersToCopy>
 			robot;
 		</RequiredFoldersToCopy>
 	</PropertyGroup>
 
-	<Target Name="CopyOutputDllsToPluginsFolder" Condition="'$(Configuration)'=='DEBUG'" AfterTargets="AfterBuild">
+	<Target Name="CopyOutputDllsToPluginsFolder" AfterTargets="AfterBuild">
 		<MakeDir Directories="$(BepInExDir)/plugins/$(PluginDirName)" />
 		<CombinePath BasePath="$(OutDir)" Paths="$(RequiredFilesToCopy)">
 			<Output TaskParameter="CombinedPaths" ItemName="RequiredFilesToCopy_Combined" />
@@ -73,28 +72,10 @@
 		<Copy SourceFiles="@(RequiredFilesToCopy_Combined)" DestinationFolder="$(BepInExDir)/plugins/$(PluginDirName)" />
 	</Target>
 
-	<Target Name="CopyFoldersToPluginsFolder" Condition="'$(Configuration)'=='DEBUG'" AfterTargets="AfterBuild">
+	<Target Name="CopyFoldersToPluginsFolder" AfterTargets="AfterBuild">
 		<ItemGroup>
 			<RequiredFolders Include="$(RequiredFoldersToCopy.Split(';'))" />
-			<FilesToCopy Include="%(RequiredFolders.Identity)\**\*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')" />
-	</Target>
-
-
-
-	<Target Name="CopyOutputDllsToPluginsFolder" Condition="'$(Configuration)'=='RELEASE'" AfterTargets="AfterBuild">
-		<MakeDir Directories="$(BepInExDir)/plugins/$(PluginDirName)" />
-		<CombinePath BasePath="$(OutDir)" Paths="$(RequiredFilesToCopy)">
-			<Output TaskParameter="CombinedPaths" ItemName="RequiredFilesToCopy_Combined" />
-		</CombinePath>
-		<Copy SourceFiles="@(RequiredFilesToCopy_Combined)" DestinationFolder="$(BepInExDir)/plugins/$(PluginDirName)" />
-	</Target>
-
-	<Target Name="CopyFoldersToPluginsFolder" Condition="'$(Configuration)'=='RELEASE'" AfterTargets="AfterBuild">
-		<ItemGroup>
-			<RequiredFolders Include="$(RequiredFoldersToCopy.Split(';'))" />
-			<FilesToCopy Include="%(RequiredFolders.Identity)\**\*" />
+			<FilesToCopy Include="%(RequiredFolders.Identity)/**/*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')" />
 	</Target>
