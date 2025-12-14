@@ -64,20 +64,20 @@ namespace ChangeSkin
         internal static void ToggleOn()
         {
             ChangeBody.ToggleOn();
-            // ChangeWoundView.ToggleOn();
+            ChangeWoundView.ToggleOn();
         }
         internal static void ToggleOff()
         {
             ChangeBody.ToggleOff();
-            // ChangeWoundView.ToggleOff();
+            ChangeWoundView.ToggleOff();
         }
         internal static void Reload()
         {
 
             ChangeBody.ToggleOff();
-            // ChangeWoundView.ToggleOff();
+            ChangeWoundView.ToggleOff();
             ChangeBody.ToggleOn();
-            // ChangeWoundView.ToggleOn();
+            ChangeWoundView.ToggleOn();
         }
     }
 }
