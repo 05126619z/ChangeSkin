@@ -123,7 +123,6 @@ namespace ChangeSkin
                     if (image.sprite.name == sprite.name)
                     {
                         image.sprite = sprite;
-                        image.color = Color.white; // Ensure the image is fully visible
                     }
                 }
                 yield return null;

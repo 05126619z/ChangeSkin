@@ -37,10 +37,6 @@
 			<HintPath>$(GameAssembliesDir)/Unity.TextMeshPro.dll</HintPath>
 		</Reference>
 
-		<Reference Include="ScavLib">
-			<HintPath>./redist/ScavLib.dll</HintPath>
-		</Reference>
-
 		<Content Include="robot/Textures/**"> 
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
 		</Content>
