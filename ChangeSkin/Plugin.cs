@@ -24,12 +24,17 @@ namespace ChangeSkin
                     typeof(Body).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance),
                     typeof(Patches).GetMethod(nameof(Patches.Body_Update))
                     );
-                    Hook a2 = new Hook(
+                Hook a2 = new Hook(
                     typeof(WoundView).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance),
                     typeof(Patches).GetMethod(nameof(Patches.WoundView_Update))
                     );
+                Hook a3 = new Hook(
+                    typeof(ConsoleScript).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance),
+                    typeof(Patches).GetMethod(nameof(Patches.ConsoleScript_Start)) // I didnt want to add this but no commands register due to bug in ConsoleScript.Start() Remove when patched.
+                    );
                 Logger.LogInfo(a1);
                 Logger.LogInfo(a2);
+                Logger.LogInfo(a3);
             }
             catch (Exception e)
             {
