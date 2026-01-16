@@ -94,12 +94,8 @@ jobs:
     - name: Create Release for 
       run: |
         Compress-Archive -Path ${{ env.MODS_PATH }}\* -DestinationPath ".\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip"
-        gh release create "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" \
-              --notes="${{ github.event.inputs.release_notes }}" \
-              --title="${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}"
-        gh release upload \
-              "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" \
-              .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
+        gh release create "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" --notes="${{ github.event.inputs.release_notes }}" --title="${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}"
+        gh release upload "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
         if ('${{ github.event.inputs.is_draft }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --draft}
         if ('${{ github.event.inputs.is_prerelease }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --prerelease}
       
