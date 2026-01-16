@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using BepInEx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -65,7 +66,7 @@ namespace ChangeSkin
             {
                 try
                 {
-                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{Config.skinName}/Textures/WoundView/{filename}.png"); // Hacky concat! Hah!
+                    string path = Paths.PluginPath + "/ChangeSkin/resources" + $"/{Config.skinName}/Textures/WoundView/{filename}.png";
                     TextureStorage.woundViewTextures.Add(filename, Utils.LoadTexture(path));
                     TextureStorage.woundViewTextures[filename].name = filename;
                     TextureStorage.woundViewTextures[filename].filterMode = FilterMode.Point;

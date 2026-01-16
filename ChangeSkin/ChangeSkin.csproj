@@ -1,78 +1,92 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
-		<LangVersion>10.0</LangVersion>
-		<AssemblyName>ChangeSkin</AssemblyName>
-		<Product>Multiplayer for Scav Prototype aka Casualties: Unknown (WIP)</Product>
-		<Version>1.0.0</Version>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
-		<RestoreAdditionalProjectSources>
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <AssemblyName>ChangeSkin</AssemblyName>
+    <Product>Multiplayer for Scav Prototype aka Casualties: Unknown (WIP)</Product>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RestoreAdditionalProjectSources>
 			https://api.nuget.org/v3/index.json;
 			https://nuget.bepinex.dev/v3/index.json;
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
-		<RootNamespace>ChangeSkin</RootNamespace>
-		<Platforms>AnyCPU;x64;x86</Platforms>
-	</PropertyGroup>
+    <RootNamespace>ChangeSkin</RootNamespace>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
 
-	<Import Project="../vars.targets" />
+  <Import Project="../vars.targets" />
 
-	<ItemGroup>
-		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
-		<PackageReference Include="BepInEx.Core" Version="5.*" />
-		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
-		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
-		<PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference
+      Include="BepInEx.AssemblyPublicizer.MSBuild"
+      Version="0.4.2"
+      PrivateAssets="all"
+    />
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" IncludeAssets="compile" />
 
-		<Reference Include="Assembly-CSharp" Publicize="true">
-			<HintPath>$(GameAssembliesDir)/Assembly-CSharp.dll</HintPath>
-		</Reference>
+    <Reference Include="Assembly-CSharp" Publicize="true">
+      <HintPath>$(GameAssembliesDir)/Assembly-CSharp.dll</HintPath>
+    </Reference>
 
-		<Reference Include="UnityEngine.UI">
-			<HintPath>$(GameAssembliesDir)/UnityEngine.UI.dll</HintPath>
-		</Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameAssembliesDir)/UnityEngine.UI.dll</HintPath>
+    </Reference>
 
-		<Reference Include="Unity.TextMeshPro">
-			<HintPath>$(GameAssembliesDir)/Unity.TextMeshPro.dll</HintPath>
-		</Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GameAssembliesDir)/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
 
-		<Content Include="robot/Textures/**"> 
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
-		</Content>
+    <Content Include="robot/Textures/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
-	</ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference
+      Include="Microsoft.NETFramework.ReferenceAssemblies"
+      Version="1.0.2"
+      PrivateAssets="all"
+    />
+  </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="redist/" />
+  </ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="redist/" />
-	</ItemGroup>
-
-	<PropertyGroup>
-		<RequiredFilesToCopy>
+  <PropertyGroup>
+    <RequiredFilesToCopy>
 			$(AssemblyName).dll;
 		</RequiredFilesToCopy>
-		<RequiredFoldersToCopy>
-			robot;
+    <RequiredFoldersToCopy>
+			resources;
 		</RequiredFoldersToCopy>
-	</PropertyGroup>
+  </PropertyGroup>
 
-	<Target Name="CopyOutputDllsToPluginsFolder" AfterTargets="AfterBuild">
-		<MakeDir Directories="$(BepInExDir)/plugins/$(PluginDirName)" />
-		<CombinePath BasePath="$(OutDir)" Paths="$(RequiredFilesToCopy)">
-			<Output TaskParameter="CombinedPaths" ItemName="RequiredFilesToCopy_Combined" />
-		</CombinePath>
-		<Copy SourceFiles="@(RequiredFilesToCopy_Combined)" DestinationFolder="$(BepInExDir)/plugins/$(PluginDirName)" />
-	</Target>
+  <Target Name="CopyOutputDllsToPluginsFolder" AfterTargets="AfterBuild">
+    <MakeDir Directories="$(BepInExDir)/plugins/$(PluginDirName)" />
+    <CombinePath BasePath="$(OutDir)" Paths="$(RequiredFilesToCopy)">
+      <Output TaskParameter="CombinedPaths" ItemName="RequiredFilesToCopy_Combined" />
+    </CombinePath>
+    <Copy
+      SourceFiles="@(RequiredFilesToCopy_Combined)"
+      DestinationFolder="$(BepInExDir)/plugins/$(PluginDirName)"
+    />
+  </Target>
 
-	<Target Name="CopyFoldersToPluginsFolder" AfterTargets="AfterBuild">
-		<ItemGroup>
-			<RequiredFolders Include="$(RequiredFoldersToCopy.Split(';'))" />
-			<FilesToCopy Include="%(RequiredFolders.Identity)/**/*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')" />
-	</Target>
+  <Target Name="CopyFoldersToPluginsFolder" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <RequiredFolders Include="$(RequiredFoldersToCopy.Split(';'))" />
+      <FilesToCopy Include="%(RequiredFolders.Identity)/**/*" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(FilesToCopy)"
+      DestinationFiles="@(FilesToCopy->'$(BepInExDir)/plugins/$(PluginDirName)/%(Identity)')"
+    />
+  </Target>
 </Project>

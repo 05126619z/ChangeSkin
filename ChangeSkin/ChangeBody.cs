@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using BepInEx;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,18 +20,24 @@ namespace ChangeSkin
             PreloadBodyTextures();
             PreloadBodySprites();
             SaveOriginalSprites();
-            ChangeFacialExpression.SwapFacialExpression(PlayerCamera.main.body.GetComponentInChildren<FacialExpression>());
+            ChangeFacialExpression.SwapFacialExpression(
+                PlayerCamera.main.body.GetComponentInChildren<FacialExpression>()
+            );
         }
+
         internal static void ToggleOff()
         {
             Config.replaceBody = false;
             PlayerCamera.main.body.StopAllCoroutines();
             ReturnTextures();
-            ChangeFacialExpression.UnSwapFacialExpression(PlayerCamera.main.body.GetComponentInChildren<FacialExpression>());
+            ChangeFacialExpression.UnSwapFacialExpression(
+                PlayerCamera.main.body.GetComponentInChildren<FacialExpression>()
+            );
             TextureStorage.bodyTextures.Clear();
             TextureStorage.bodySprites.Clear();
             TextureStorage.originalBodySprites.Clear();
         }
+
         static string[] filenames =
         {
             "experimentTail",
@@ -64,7 +71,8 @@ namespace ChangeSkin
             "experimentHeadBackMouthMini",
             "experimentHeadBack",
             "experimentHandB",
-            "experimentHandF"
+            "experimentHandF",
+            "experimentNosebleed",
         };
 
         internal static void PreloadBodyTextures()
@@ -73,7 +81,10 @@ namespace ChangeSkin
             {
                 try
                 {
-                    string path = string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{Config.skinName}/Textures/Body/{filename}.png"); // Hacky concat! Hah!
+                    string path =
+                        Paths.PluginPath
+                        + "/ChangeSkin/resources"
+                        + $"/{Config.skinName}/Textures/Body/{filename}.png";
                     TextureStorage.bodyTextures.Add(filename, Utils.LoadTexture(path));
                     TextureStorage.bodyTextures[filename].name = filename;
                     TextureStorage.bodyTextures[filename].filterMode = FilterMode.Point;
@@ -108,21 +119,30 @@ namespace ChangeSkin
                 }
             }
         }
+
         internal static void SaveOriginalSprites()
         {
-            foreach (SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>())
+            foreach (
+                SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+            )
             {
                 if (!TextureStorage.originalBodySprites.ContainsKey(spriteRenderer.sprite.name))
                 {
-                    TextureStorage.originalBodySprites.Add(spriteRenderer.sprite.name, spriteRenderer.sprite);
+                    TextureStorage.originalBodySprites.Add(
+                        spriteRenderer.sprite.name,
+                        spriteRenderer.sprite
+                    );
                 }
             }
         }
+
         internal static IEnumerator ReplaceSprites()
         {
             foreach (Sprite sprite in TextureStorage.bodySprites.Values)
             {
-                foreach (SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>())
+                foreach (
+                    SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+                )
                 {
                     if (spriteRenderer.sprite == null)
                     {
@@ -137,11 +157,19 @@ namespace ChangeSkin
             }
             yield break;
         }
+
         internal static void ReturnTextures()
         {
-            foreach (SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>())
+            foreach (
+                SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+            )
             {
-                if (TextureStorage.originalBodySprites.TryGetValue(spriteRenderer.sprite.name, out Sprite originalSprite))
+                if (
+                    TextureStorage.originalBodySprites.TryGetValue(
+                        spriteRenderer.sprite.name,
+                        out Sprite originalSprite
+                    )
+                )
                 {
                     spriteRenderer.sprite = originalSprite;
                 }

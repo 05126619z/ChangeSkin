@@ -4,80 +4,84 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using BepInEx;
+using UnityEngine;
 
-namespace ChangeSkin
+namespace ChangeSkin;
+
+internal static class Config
 {
-    internal static class Config
+    public static bool replaceBody = false;
+    public static bool replaceWoundView = false;
+    public static string skinName;
+
+    public static string ToggleReplacement(string[] args)
     {
-        public static bool replaceBody = false;
-        public static bool replaceWoundView = false;
-        public static string skinName;
-        public static string ToggleReplacement(string[] args) // For console
-        {
-            if (args.Length == 1)
-            {
-                return "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
-            }
-            switch (args[1])
-            {
-                case "enable":
-                    if (skinName == null)
-                    {
-                        return "Select skin first";
-                    }
-                    Config.ToggleOn();
-                    return "Texture replacement ON";
-                case "disable":
-                    if (skinName == null)
-                    {
-                        return "Select skin first";
-                    }
-                    Config.ToggleOff();
-                    return "Texture replacement OFF";
-                case "reload":
-                    if (skinName == null)
-                    {
-                        return "Select skin first";
-                    }
-                    Config.Reload();
-                    return "Textures reloaded";
-                case "select":
+        string helpMessage =
+            "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
 
-                    if (args[2] == null)
-                    {
-                        return "Usage: skin select <Folder with skin>";
-                    }
-                    if (Directory.Exists(string.Concat(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"/{args[2]}")))
-                    {
-                        skinName = args[2];
-                        return $"{skinName} selected";
-                    }
-                    else
-                    {
-                        return $"{skinName} not found";
-                    }
-                default:
-                    return "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
-            }
-        }
-        internal static void ToggleOn()
-        {
-            ChangeBody.ToggleOn();
-            ChangeWoundView.ToggleOn();
-        }
-        internal static void ToggleOff()
-        {
-            ChangeBody.ToggleOff();
-            ChangeWoundView.ToggleOff();
-        }
-        internal static void Reload()
-        {
+        if (args.Length == 1)
+            return helpMessage;
 
-            ChangeBody.ToggleOff();
-            ChangeWoundView.ToggleOff();
-            ChangeBody.ToggleOn();
-            ChangeWoundView.ToggleOn();
+        string command = args[1];
+
+        if (command == "select")
+        {
+            if (args.Length < 3)
+                return "Usage: skin select <Folder with skin>";
+
+            string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
+            Plugin.ModConfig.CachedSkinName = args[2];
+            skinName = args[2];
+            return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";
         }
+
+        if (skinName == null && Plugin.ModConfig.CachedSkinName != null)
+        {
+            skinName = Plugin.ModConfig.CachedSkinName;
+        }
+
+        if (skinName == null)
+            return "Select skin first";
+
+        return command switch
+        {
+            "enable" => ExecuteWithConfig(Config.ToggleOn, "Texture replacement ON"),
+            "disable" => ExecuteWithConfig(Config.ToggleOff, "Texture replacement OFF"),
+            "reload" => ExecuteWithConfig(Config.Reload, "Textures reloaded"),
+            _ => helpMessage,
+        };
+    }
+
+    private static string ExecuteWithConfig(Action action, string successMessage)
+    {
+        action();
+        return successMessage;
+    }
+
+    private static readonly Action[] OnActions = [ChangeBody.ToggleOn, ChangeWoundView.ToggleOn];
+
+    private static readonly Action[] OffActions = [ChangeBody.ToggleOff, ChangeWoundView.ToggleOff];
+
+    public static void ToggleOn()
+    {
+        foreach (Action action in OnActions)
+        {
+            action.Invoke();
+        }
+    }
+
+    public static void ToggleOff()
+    {
+        foreach (Action action in OffActions)
+        {
+            action.Invoke();
+        }
+    }
+
+    public static void Reload()
+    {
+        ToggleOff();
+        ToggleOn();
     }
 }

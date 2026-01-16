@@ -9,12 +9,12 @@ namespace ChangeSkin
 {
     internal static class TextureStorage
     {
-        internal static Dictionary<string, Texture2D> bodyTextures = new Dictionary<string, Texture2D>();
-        internal static Dictionary<string, Sprite> bodySprites = new Dictionary<string, Sprite>();
-        internal static Dictionary<string, Sprite> originalBodySprites = new Dictionary<string, Sprite>();
+        internal static Dictionary<string, Texture2D> bodyTextures = new();
+        internal static Dictionary<string, Sprite> bodySprites = new();
+        internal static Dictionary<string, Sprite> originalBodySprites = new();
 
-        internal static Dictionary<string, Texture2D> woundViewTextures = new Dictionary<string, Texture2D>();
-        internal static Dictionary<string, Sprite> woundViewSprites = new Dictionary<string, Sprite>();
-        internal static Dictionary<string, Sprite> originalWoundViewSprites = new Dictionary<string, Sprite>();
+        internal static Dictionary<string, Texture2D> woundViewTextures = new();
+        internal static Dictionary<string, Sprite> woundViewSprites = new();
+        internal static Dictionary<string, Sprite> originalWoundViewSprites = new();
     }
 }
