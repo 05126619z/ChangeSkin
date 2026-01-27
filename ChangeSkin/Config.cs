@@ -19,7 +19,7 @@ internal static class Config
     {
         string helpMessage =
             "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
-
+        
         if (args.Length == 1)
             return helpMessage;
 

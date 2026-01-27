@@ -30,9 +30,9 @@ on:
         default: false
   
 env:
-  GAME_FILE: ${{ vars.GAME_FILE }}
-  GAME_NAME: ${{ vars.GAME_NAME }}
-  MOD_NAME: ${{ vars.MOD_NAME }}
+  GAME_FILE: "14472058"
+  GAME_NAME: "CasualtiesUnknownDemo"
+  MOD_NAME: "ChangeSkin"
       
 jobs:
   setup:

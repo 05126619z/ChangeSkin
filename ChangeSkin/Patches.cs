@@ -39,12 +39,12 @@ namespace ChangeSkin
             }
         }
 
-        public delegate void orig_ConsoleScript_Start(ConsoleScript self);
+        // public delegate void orig_ConsoleScript_Start(ConsoleScript self);
 
-        public static void ConsoleScript_Start(orig_ConsoleScript_Start orig, ConsoleScript self)
-        {
-            self.RegisterAllCommands();
-            orig(self);
-        }
+        // public static void ConsoleScript_Start(orig_ConsoleScript_Start orig, ConsoleScript self)
+        // {
+        //     self.RegisterAllCommands();
+        //     orig(self);
+        // }
     }
 }
