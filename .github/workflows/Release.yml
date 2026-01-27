@@ -31,7 +31,7 @@ on:
   
 env:
   GAME_FILE: "14472058"
-  GAME_NAME: "CasualtiesUnknownDemo"
+  GAME_NAME: "CasualtiesUnknown"
   MOD_NAME: "ChangeSkin"
       
 jobs:
