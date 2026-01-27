@@ -6,9 +6,9 @@ name: Test and build
 on: [workflow_dispatch, push, pull_request]
 
 env:
-    GAME_FILE: ${{ vars.GAME_FILE }}
-    GAME_NAME: ${{ vars.GAME_NAME }}
-    MOD_NAME: ${{ vars.MOD_NAME }}
+  GAME_FILE: "15788947"
+  GAME_NAME: "CasualtiesUnknownDemo"
+  MOD_NAME: "ChangeSkin"
 
 jobs:
   setup:
