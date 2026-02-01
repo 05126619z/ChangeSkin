@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <AssemblyName>ChangeSkin</AssemblyName>
     <Product>Multiplayer for Scav Prototype aka Casualties: Unknown (WIP)</Product>
@@ -42,9 +42,21 @@
       <HintPath>$(GameAssembliesDir)/Unity.TextMeshPro.dll</HintPath>
     </Reference>
 
-    <Content Include="robot/Textures/**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Reference Include="KrokoshaCasualtiesMP" Publicize="true">
+      <HintPath>./KrokoshaCasualtiesMP.dll</HintPath>
+    </Reference>
+
+    <Reference Include="Unity.Netcode.Components" Publicize="true">
+      <HintPath>./Unity.Netcode.Components.dll</HintPath>
+    </Reference>
+
+    <Reference Include="Unity.Netcode.Runtime" Publicize="true">
+      <HintPath>./Unity.Netcode.Runtime.dll</HintPath>
+    </Reference>
+
+    <Reference Include="Unity.Networking.Transport" Publicize="true">
+      <HintPath>./Unity.Networking.Transport.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -56,7 +68,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="redist/" />
+    <Folder Include="redist/**" />
   </ItemGroup>
 
   <PropertyGroup>

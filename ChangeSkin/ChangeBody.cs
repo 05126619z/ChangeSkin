@@ -12,123 +12,94 @@ using UnityEngine.UIElements;
 
 namespace ChangeSkin
 {
-    internal class ChangeBody
+    public class ChangeBody : MonoBehaviour, IDisposable
     {
-        internal static void ToggleOn()
-        {
-            Config.replaceBody = true;
-            PreloadBodyTextures();
-            PreloadBodySprites();
-            SaveOriginalSprites();
-            ChangeFacialExpression.SwapFacialExpression(
-                PlayerCamera.main.body.GetComponentInChildren<FacialExpression>()
-            );
-        }
+        Body body;
+        TextureStorage textureStorage = new();
+        ChangeFacialExpression changeFacialExpression = new();
+        string skinName;
+        public bool working = false;
 
-        internal static void ToggleOff()
-        {
-            Config.replaceBody = false;
-            PlayerCamera.main.body.StopAllCoroutines();
-            ReturnTextures();
-            ChangeFacialExpression.UnSwapFacialExpression(
-                PlayerCamera.main.body.GetComponentInChildren<FacialExpression>()
-            );
-            TextureStorage.bodyTextures.Clear();
-            TextureStorage.bodySprites.Clear();
-            TextureStorage.originalBodySprites.Clear();
-        }
+        // internal void LoadFromServer(string skinName)
+        // {
+        //     // this.skinName = skinName;
+        // }
 
-        static string[] filenames =
+        public void LoadSkin(string skinName)
         {
-            "experimentTail",
-            "experimentFoot",
-            "experimentUpTorso",
-            "experimentUpArm",
-            "experimentThigh",
-            "experimentDownTorso",
-            "experimentDownArm",
-            "experimentCrus",
-            "experimentEyeGoneHealed",
-            "experimentEyeGone",
-            "experimentEyeClosed",
-            "experimentEyeScaredBack",
-            "experimentEyeScared",
-            "experimentEyeSadBack",
-            "experimentEyeSad",
-            "experimentHead",
-            "experimentEyePanic",
-            "experimentEyeOpen",
-            "experimentEyeLookBack",
-            "experimentEyeHalfClosedBack",
-            "experimentEyeHalfClosed",
-            "experimentHeadDisfigured3Healed",
-            "experimentHeadDisfigured3",
-            "experimentHeadDisfigured2Healed",
-            "experimentHeadDisfigured2",
-            "experimentHeadDisfigured1Healed",
-            "experimentHeadDisfigured1",
-            "experimentHeadBackMouth",
-            "experimentHeadBackMouthMini",
-            "experimentHeadBack",
-            "experimentHandB",
-            "experimentHandF",
-            "experimentNosebleed",
-        };
-
-        internal static void PreloadBodyTextures()
-        {
-            foreach (string filename in filenames)
+            this.skinName = skinName;
+            try
             {
-                try
-                {
-                    string path =
-                        Paths.PluginPath
-                        + "/ChangeSkin/resources"
-                        + $"/{Config.skinName}/Textures/Body/{filename}.png";
-                    TextureStorage.bodyTextures.Add(filename, Utils.LoadTexture(path));
-                    TextureStorage.bodyTextures[filename].name = filename;
-                    TextureStorage.bodyTextures[filename].filterMode = FilterMode.Point;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Logger.LogError(e);
-                }
+                textureStorage.newBodySprites.Clear();
+                SkinLoader.LoadFromFolder(skinName, filenames, ref textureStorage.newBodySprites);
+            }
+            catch (Exception e)
+            {
+                throw (e);
             }
         }
 
-        internal static void PreloadBodySprites()
+        // internal void LoadFromURL(string url)
+        // {
+
+        // }
+
+        public void BeginReplacement()
         {
-            foreach (Texture2D texture in TextureStorage.bodyTextures.Values)
+            if (body == null)
+                body = gameObject.GetComponent<Body>();
+            if (skinName == null)
             {
-                try
-                {
-                    Sprite sprite = Sprite.Create(
-                        texture,
-                        new Rect(0, 0, texture.width, texture.height),
-                        new Vector2(0.5f, 0.5f),
-                        8,
-                        0,
-                        SpriteMeshType.Tight
-                    );
-                    sprite.name = texture.name;
-                    TextureStorage.bodySprites.Add(texture.name, sprite);
-                }
-                catch (Exception e)
-                {
-                    Plugin.Logger.LogError(e);
-                }
+                Plugin.Instance.Logger.LogInfo("No skin for body selected");
+                return;
+            }
+            ;
+            if (textureStorage.newBodySprites.Count == 0)
+                LoadSkin(skinName);
+            if (textureStorage.oldBodySprites.Count == 0)
+                SaveOriginalSprites();
+            changeFacialExpression.SwapFacialExpression(
+                body.GetComponentInChildren<FacialExpression>(),
+                textureStorage.newBodySprites
+            );
+            working = true;
+        }
+
+        private void Start() { }
+
+        private void Update()
+        {
+            if (working)
+            {
+                StartCoroutine(ReplaceSprites());
             }
         }
 
-        internal static void SaveOriginalSprites()
+        public void StopReplacement()
+        {
+            StopAllCoroutines();
+            ReturnSprites();
+            changeFacialExpression.UnSwapFacialExpression(
+                body.GetComponentInChildren<FacialExpression>()
+            );
+            working = false;
+            StopCoroutine(ReplaceSprites());
+        }
+
+        public void Dispose()
+        {
+            StopReplacement();
+        }
+
+        internal void SaveOriginalSprites()
         {
             foreach (
-                SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+                SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
             )
             {
-                if (!TextureStorage.originalBodySprites.ContainsKey(spriteRenderer.sprite.name))
+                if (!textureStorage.oldBodySprites.ContainsKey(spriteRenderer.sprite.name))
                 {
-                    TextureStorage.originalBodySprites.Add(
+                    textureStorage.oldBodySprites.Add(
                         spriteRenderer.sprite.name,
                         spriteRenderer.sprite
                     );
@@ -136,12 +107,12 @@ namespace ChangeSkin
             }
         }
 
-        internal static IEnumerator ReplaceSprites()
+        internal IEnumerator ReplaceSprites()
         {
-            foreach (Sprite sprite in TextureStorage.bodySprites.Values)
+            foreach (Sprite sprite in textureStorage.newBodySprites.Values)
             {
                 foreach (
-                    SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+                    SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
                 )
                 {
                     if (spriteRenderer.sprite == null)
@@ -158,14 +129,14 @@ namespace ChangeSkin
             yield break;
         }
 
-        internal static void ReturnTextures()
+        internal void ReturnSprites()
         {
             foreach (
-                SpriteRenderer spriteRenderer in PlayerCamera.main.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
+                SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
             )
             {
                 if (
-                    TextureStorage.originalBodySprites.TryGetValue(
+                    textureStorage.oldBodySprites.TryGetValue(
                         spriteRenderer.sprite.name,
                         out Sprite originalSprite
                     )
@@ -175,5 +146,42 @@ namespace ChangeSkin
                 }
             }
         }
+
+        static readonly string[] filenames =
+        {
+            "Body/experimentTail.png",
+            "Body/experimentFoot.png",
+            "Body/experimentUpTorso.png",
+            "Body/experimentUpArm.png",
+            "Body/experimentThigh.png",
+            "Body/experimentDownTorso.png",
+            "Body/experimentDownArm.png",
+            "Body/experimentCrus.png",
+            "Body/experimentEyeGoneHealed.png",
+            "Body/experimentEyeGone.png",
+            "Body/experimentEyeClosed.png",
+            "Body/experimentEyeScaredBack.png",
+            "Body/experimentEyeScared.png",
+            "Body/experimentEyeSadBack.png",
+            "Body/experimentEyeSad.png",
+            "Body/experimentHead.png",
+            "Body/experimentEyePanic.png",
+            "Body/experimentEyeOpen.png",
+            "Body/experimentEyeLookBack.png",
+            "Body/experimentEyeHalfClosedBack.png",
+            "Body/experimentEyeHalfClosed.png",
+            "Body/experimentHeadDisfigured3Healed.png",
+            "Body/experimentHeadDisfigured3.png",
+            "Body/experimentHeadDisfigured2Healed.png",
+            "Body/experimentHeadDisfigured2.png",
+            "Body/experimentHeadDisfigured1Healed.png",
+            "Body/experimentHeadDisfigured1.png",
+            "Body/experimentHeadBackMouth.png",
+            "Body/experimentHeadBackMouthMini.png",
+            "Body/experimentHeadBack.png",
+            "Body/experimentHandB.png",
+            "Body/experimentHandF.png",
+            "Body/experimentNosebleed.png",
+        };
     }
 }

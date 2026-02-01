@@ -17,6 +17,7 @@ namespace ScavHook
         public static void AddCommand(string commandName, Func<string[], string> commandFunction)
         {
             ConsoleStuff.addedCommands[commandName] = commandFunction;
+            
         }
     }
 

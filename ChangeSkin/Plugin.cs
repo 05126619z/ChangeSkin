@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using BepInEx;
@@ -9,52 +10,38 @@ using UnityEngine;
 
 namespace ChangeSkin
 {
-    [BepInPlugin("05126619z.changeskin", "ChangeSkin", "1.3.0")]
+    [BepInPlugin(ModGUID, ModName, ModVersion)]
     public class Plugin : BaseUnityPlugin
     {
-        internal static new ManualLogSource Logger;
-        private readonly Harmony _harmony = new("05126619z.changeskin");
+        public const string ModGUID = "05126619z.changeskin";
+        public const string ModName = "ChangeSkin";
+        public const string ModVersion = "2.0.0";
+
+        internal new ManualLogSource Logger;
+        private readonly Harmony _harmony = new(ModGUID);
         public static ModConfig ModConfig;
+        public static Plugin Instance { get; private set; } = null!;
+        public static GameObject SingletonObject;
 
         public void Awake()
         {
             Logger = base.Logger;
+            Instance = this;
             ModConfig = ModConfig.Load(Paths.PluginPath + "/ChangeSkin/settings.json");
             try
             {
-                Hook a1 = new(
-                    typeof(Body).GetMethod(
-                        "Update",
-                        BindingFlags.NonPublic | BindingFlags.Instance
-                    ),
-                    typeof(Patches).GetMethod(nameof(Patches.Body_Update))
-                );
-                Hook a2 = new(
-                    typeof(WoundView).GetMethod(
-                        "Update",
-                        BindingFlags.NonPublic | BindingFlags.Instance
-                    ),
-                    typeof(Patches).GetMethod(nameof(Patches.WoundView_Update))
-                );
-                // Hook a3 = new(
-                //     typeof(ConsoleScript).GetMethod(
-                //         "Start",
-                //         BindingFlags.Public | BindingFlags.Instance
-                //     ),
-                //     typeof(Patches).GetMethod(nameof(Patches.ConsoleScript_Start)) // I didnt want to add this but no commands register due to bug in ConsoleScript.Start()  !!  Remove when patched.
-                // );
-                Logger.LogInfo(a1);
-                Logger.LogInfo(a2);
-                // Logger.LogInfo(a3);
+                _harmony.PatchAll();
             }
             catch (Exception e)
             {
                 Logger.LogError(e);
             }
-            _harmony.PatchAll();
-            ScavHook.ConsoleManager.AddCommand("skin", args => ChangeSkin.Config.ToggleReplacement(args));
-
-            Logger.LogInfo($"Plugin ChangeSkin is loaded!");
+            SingletonObject = new("ChangeSkinGameObject");
+            SingletonObject.AddComponent<ChangeSkinMonoBehaviour>();
+            // SingletonObject.AddComponent<ChangeSkinNetworkComponent>();
+            DontDestroyOnLoad(SingletonObject);
+            ScavHook.ConsoleManager.AddCommand("skin", args => ChangeSkinMonoBehaviour.ToggleReplacement(args));
+            Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
     }
 }

@@ -8,12 +8,15 @@ using UnityEngine;
 namespace ChangeSkin
 {
     // Yuck!
-    internal static class ChangeFacialExpression
+    internal class ChangeFacialExpression
     {
-        static List<Sprite> facialSprites = new List<Sprite>();
-        static List<Sprite[]> facialSpritesLists = new List<Sprite[]>();
+        List<Sprite> facialSprites = new List<Sprite>();
+        List<Sprite[]> facialSpritesLists = new List<Sprite[]>();
 
-        internal static void SwapFacialExpression(FacialExpression facialExpression)
+        internal void SwapFacialExpression(
+            FacialExpression facialExpression,
+            Dictionary<string, Sprite> newFacialSprites
+        )
         {
             if (facialSprites.Count == 0 || facialSpritesLists.Count == 0)
             {
@@ -25,53 +28,47 @@ namespace ChangeSkin
                 facialSpritesLists.Add(facialExpression.disfiguredHead);
                 facialSpritesLists.Add(facialExpression.disfiguredHeadHeal);
             }
-            TextureStorage.bodySprites.TryGetValue(
-                "experimentHeadBack",
-                out facialExpression.defaultHead
-            );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue("experimentHeadBack", out facialExpression.defaultHead);
+            newFacialSprites.TryGetValue(
                 "experimentHeadBackMouth",
                 out facialExpression.defaultHeadMouth
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadBackMouthMini",
                 out facialExpression.defaultHeadMouthHalf
             );
-            TextureStorage.bodySprites.TryGetValue(
-                "experimentEyeGone",
-                out facialExpression.eyesGone
-            );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue("experimentEyeGone", out facialExpression.eyesGone);
+            newFacialSprites.TryGetValue(
                 "experimentEyeGoneHealed",
                 out facialExpression.eyesGoneHealed
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured1",
                 out facialExpression.disfiguredHead[0]
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured2",
                 out facialExpression.disfiguredHead[1]
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured3",
                 out facialExpression.disfiguredHead[2]
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured1Healed",
                 out facialExpression.disfiguredHeadHeal[0]
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured2Healed",
                 out facialExpression.disfiguredHeadHeal[1]
             );
-            TextureStorage.bodySprites.TryGetValue(
+            newFacialSprites.TryGetValue(
                 "experimentHeadDisfigured3Healed",
                 out facialExpression.disfiguredHeadHeal[2]
             );
         }
 
-        internal static void UnSwapFacialExpression(FacialExpression facialExpression)
+        internal void UnSwapFacialExpression(FacialExpression facialExpression)
         {
             facialExpression.defaultHead = facialSprites[0];
             facialExpression.defaultHeadMouth = facialSprites[1];

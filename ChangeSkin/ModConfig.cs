@@ -5,37 +5,16 @@ using UnityEngine;
 [Serializable]
 public class ModConfig
 {
-    public string cachedSkinName = "robot";
-    public bool modEnabled = true; // unused
+    private string selectedSkin = "robot";
 
-    public event Action<string> OnSkinNameChanged;
-    public event Action<bool> OnModEnabledChanged;
-
-    private string skinName;
-    private bool enabled;
-
-    public string CachedSkinName
+    public string SelectedSkin
     {
-        get => skinName;
+        get => selectedSkin;
         set
         {
-            if (skinName != value)
+            if (selectedSkin != value)
             {
-                skinName = value;
-                OnSkinNameChanged?.Invoke(value);
-            }
-        }
-    }
-
-    public bool ModEnabled
-    {
-        get => enabled;
-        set
-        {
-            if (enabled != value)
-            {
-                enabled = value;
-                OnModEnabledChanged?.Invoke(value);
+                selectedSkin = value;
             }
         }
     }

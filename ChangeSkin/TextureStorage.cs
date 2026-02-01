@@ -7,14 +7,9 @@ using UnityEngine;
 
 namespace ChangeSkin
 {
-    internal static class TextureStorage
+    internal class TextureStorage
     {
-        internal static Dictionary<string, Texture2D> bodyTextures = new();
-        internal static Dictionary<string, Sprite> bodySprites = new();
-        internal static Dictionary<string, Sprite> originalBodySprites = new();
-
-        internal static Dictionary<string, Texture2D> woundViewTextures = new();
-        internal static Dictionary<string, Sprite> woundViewSprites = new();
-        internal static Dictionary<string, Sprite> originalWoundViewSprites = new();
+        internal Dictionary<string, Sprite> newBodySprites = new();
+        internal Dictionary<string, Sprite> oldBodySprites = new();
     }
 }

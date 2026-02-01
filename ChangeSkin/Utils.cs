@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,52 +16,69 @@ namespace ChangeSkin
     {
         public static Texture2D LoadTexture(string path)
         {
+            Texture2D newTexture = new Texture2D(2, 2);
             try
             {
                 byte[] bytes = File.ReadAllBytes(path);
-                if (bytes == null || bytes.Length == 0)
-                {
-                    throw new Exception($"Failed to read bytes from {path}");
-                }
-                Texture2D newTexture = new Texture2D(2, 2);
                 newTexture.LoadImage(bytes);
-                if (newTexture == null)
-                {
-                    throw new Exception($"Failed to load texture from {path}. Maybe it's not a texture?");
-                }
                 newTexture.filterMode = FilterMode.Point;
-                return newTexture;
             }
             catch (Exception e)
             {
-                throw (e);
+                newTexture = Resources.Load<Texture2D>("WarningSign");
+                throw(e);
             }
+            return newTexture;
         }
 
-        public static async Task<AudioClip> LoadAudio(string path)
+        public static Sprite LoadSprite(string path)
         {
-        AudioClip clip = null;
-        using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
-        {
-        uwr.SendWebRequest();
-
-        try
-        {
-            while (!uwr.isDone) await Task.Delay(5);
-
-            if (uwr.result == UnityWebRequest.Result.ConnectionError || uwr.result == UnityWebRequest.Result.ProtocolError) Debug.Log($"{uwr.error}");
-            else
+            Sprite outSprite = new();
+            try
             {
-                clip = DownloadHandlerAudioClip.GetContent(uwr);
+                Texture2D tex = LoadTexture(path);
+                outSprite = Sprite.Create(
+                    tex,
+                    new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    8,
+                    0,
+                    SpriteMeshType.Tight
+                );
             }
+            catch (Exception e)
+            {
+                outSprite = Resources.Load<Sprite>("WarningSign");
+                throw(e);
+            }
+            return outSprite;
         }
-        catch (Exception err)
-        {
-            Debug.Log($"{err.Message}, {err.StackTrace}");
-        }
-        }
+        
 
-        return clip;
-        }
+        // public static async Task<AudioClip> LoadAudio(string path)
+        // {
+        // AudioClip clip = null;
+        // using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
+        // {
+        // uwr.SendWebRequest();
+
+        // try
+        // {
+        //     while (!uwr.isDone) await Task.Delay(5);
+
+        //     if (uwr.result == UnityWebRequest.Result.ConnectionError || uwr.result == UnityWebRequest.Result.ProtocolError) Debug.Log($"{uwr.error}");
+        //     else
+        //     {
+        //         clip = DownloadHandlerAudioClip.GetContent(uwr);
+        //     }
+        // }
+        // catch (Exception err)
+        // {
+        //     Debug.Log($"{err.Message}, {err.StackTrace}");
+        // }
+        // }
+
+        // return clip;
+        // }
     }
 }

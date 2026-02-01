@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using BepInEx;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -15,36 +16,29 @@ using static UnityEngine.UIElements.UIR.GradientSettingsAtlas;
 
 namespace ChangeSkin
 {
-    internal class Patches
-    {
-        public delegate void orig_Body_Update(Body self);
-
-        public static void Body_Update(orig_Body_Update orig, Body self)
-        {
-            orig(self);
-            if (Config.replaceBody)
-            {
-                self.StartCoroutine(ChangeBody.ReplaceSprites());
-            }
-        }
-
-        public delegate void orig_WoundView_Update(WoundView self);
-
-        public static void WoundView_Update(orig_WoundView_Update orig, WoundView self)
-        {
-            orig(self);
-            if (Config.replaceWoundView)
-            {
-                self.StartCoroutine(ChangeWoundView.ReplaceSprites());
-            }
-        }
-
-        // public delegate void orig_ConsoleScript_Start(ConsoleScript self);
-
-        // public static void ConsoleScript_Start(orig_ConsoleScript_Start orig, ConsoleScript self)
-        // {
-        //     self.RegisterAllCommands();
-        //     orig(self);
-        // }
-    }
+    // [HarmonyPatch(typeof(Body))]
+    // internal class Body_Patches
+    // {
+    //     [HarmonyPatch(nameof(Body.Update))]
+    //     public static void Postfix(Body __instance)
+    //     {
+    //         ChangeBody changeBody = __instance.GetComponent<ChangeBody>();
+    //         if (changeBody != null && changeBody.working)
+    //         {
+    //             __instance.StartCoroutine(changeBody.ReplaceSprites());
+    //         }
+    //     }
+    // }
+    // [HarmonyPatch(typeof(WoundView))]
+    // internal class WoundView_Patches
+    // {
+    //     [HarmonyPatch(nameof(WoundView.Update))]
+    //     public static void Postfix(WoundView __instance)
+    //     {
+    //         if (Config.replaceWoundView)
+    //         {
+    //             __instance.StartCoroutine(ChangeWoundView.ReplaceSprites());
+    //         }
+    //     }
+    // }
 }
