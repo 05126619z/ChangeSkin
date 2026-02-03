@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using BepInEx;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -15,6 +16,7 @@ using static UnityEngine.UIElements.UIR.GradientSettingsAtlas;
 
 namespace ChangeSkin
 {
+    [HarmonyPatch]
     internal class Patches
     {
         public delegate void orig_Body_Update(Body self);
@@ -39,12 +41,23 @@ namespace ChangeSkin
             }
         }
 
-        public delegate void orig_ConsoleScript_Start(ConsoleScript self);
-
-        public static void ConsoleScript_Start(orig_ConsoleScript_Start orig, ConsoleScript self)
+        [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.RegisterAllCommands))]
+        public static void Postfix()
         {
-            self.RegisterAllCommands();
-            orig(self);
+            ConsoleScript.Commands.Add(
+                new Command(
+                    "skin",
+                    "Control command for ChangeSkin",
+                    delegate(string[] args)
+                    {
+                        string output = ChangeSkin.Config.ToggleReplacement(args);
+                        ConsoleScript.instance.LogToConsole(output);
+                        Plugin.Logger.LogInfo(output);
+                    },
+                    null,
+                    []
+                )
+            );
         }
     }
 }
