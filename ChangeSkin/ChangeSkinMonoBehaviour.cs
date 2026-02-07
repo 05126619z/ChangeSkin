@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using BepInEx;
 using KrokoshaCasualtiesMP;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -13,45 +14,95 @@ namespace ChangeSkin;
 
 public class ChangeSkinMonoBehaviour : MonoBehaviour
 {
-    static string localSkin;
+    static ChangeSkinNetworkComponent localNetworkComponent;
     static ScavClientInstance localScavInstance;
     static Body localBody;
     static ChangeBody localChangeBody;
-    static Dictionary<ScavClientInstance, ChangeBody> replacers = new();
     static List<ScavClientInstance> scavClientInstances;
-    static bool initialized = false;
+    static string ip;
+    static string port;
+
+    public static string localSkin;
+    public static Dictionary<ulong, ChangeBody> replacers = new();
+    public static bool initialized = false;
 
     public static void FirstInit()
     {
-        localSkin = Plugin.ModConfig.SelectedSkin ?? localSkin;
-        localScavInstance = ScavClientInstance.local_scavclientinstance;
+        if (Plugin.ModConfig.LastSelectedSkin != null)
+            localSkin = Plugin.ModConfig.LastSelectedSkin;
         localBody = PlayerCamera.main.body;
+
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
-            localBody.gameObject.AddComponent<ChangeBody>();
+            localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
         }
-        scavClientInstances =
-            ScavMultiClientSynchronizer.ClientIdToScavClientInstanceDict.Values.ToList<ScavClientInstance>();
-        foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+        else
         {
-            scavClientInstance.chara.AddComponent<ChangeBody>();
+            localScavInstance = ScavClientInstance.local_scavclientinstance;
+            scavClientInstances =
+                ScavMultiClientSynchronizer.ClientIdToScavClientInstanceDict.Values.ToList<ScavClientInstance>();
+            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+            {
+                ChangeBody changeBody =
+                    scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
+                replacers.Add(
+                    ScavClientInstance.GetClientIdFromBody(scavClientInstance.body),
+                    changeBody
+                );
+                if (localScavInstance == scavClientInstance)
+                {
+                    localChangeBody = changeBody;
+                }
+            }
+            SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
+            // NetworkManager.Singleton.OnClientConnectedCallback += new Action<ulong>(
+            //     ChangeSkinClientConnect
+            // );
+            // NetworkManager.Singleton.OnClientDisconnectCallback += new Action<ulong>(
+            //     ChangeSkinClientDisconnect
+            // );
         }
-        SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
-        localChangeBody = localBody.gameObject.GetComponent<ChangeBody>();
-        SkinSelect(localChangeBody, localSkin);
+        if (localSkin != null)
+            SkinSelect(localChangeBody, localSkin);
+
+        ip = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[0];
+        port = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[1];
         initialized = true;
     }
 
-    public static void OnSceneUnloaded(Scene scene)
+    private static void OnSceneUnloaded(Scene scene)
     {
+        initialized = false;
         localScavInstance = null;
+        localChangeBody = null;
         scavClientInstances = null;
+        localScavInstance = null;
         localBody = null;
+        replacers = null;
+        // Really retarded solution by keeping everything static, but idgaf so thats my destructor
+    }
+
+    private static void ChangeSkinClientConnect(ulong clientId)
+    {
+        ChangeBody changeBody = ScavClientInstance
+            .GetBodyFromClientId(clientId)
+            .gameObject.AddComponent<ChangeBody>();
+        replacers[clientId] = changeBody;
+    }
+
+    private static void ChangeSkinClientDisconnect(ulong clientId)
+    {
+        replacers.Remove(clientId);
     }
 
     public static void ChangeSkinEnable()
     {
         localChangeBody.BeginReplacement();
+        if (KrokoshaScavMultiplayer.IsNetworkActiveAndIsClient())
+        {
+            KrokoshaScavMultiplayer.Client_SendSimpleMessageToServer("ChangeSkinInitMessage");
+        }
+        else { }
     }
 
     public static void ChangeSkinDisable()
@@ -61,25 +112,13 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
     public static void SkinSelect(ChangeBody changeBody, string skinName)
     {
-        changeBody.LoadSkin(skinName);
+        changeBody.LoadSkinLocal(skinName);
     }
-
-    public static void ToggleOn()
-    {
-        // foreach(ScavClientInstance scavClientInstance in ClientIdToScavClientInstanceDict.Values)
-        // {
-        //     ChangeBody changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
-
-        //     changeBody.SetFromFolder();
-        // }
-    }
-
-    public static void ToggleOff() { }
 
     public static void ChangeSkinReload()
     {
-        ToggleOff();
-        ToggleOn();
+        ChangeSkinEnable();
+        ChangeSkinDisable();
     }
 
     public static void Startcorout(IEnumerator f)
@@ -111,7 +150,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
                 return "Usage: skin select <Folder with skin>";
 
             string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
-            Plugin.ModConfig.SelectedSkin = args[2];
+            Plugin.ModConfig.LastSelectedSkin = args[2];
             localSkin = args[2];
             SkinSelect(localChangeBody, args[2]);
             return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";

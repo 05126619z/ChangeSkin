@@ -12,32 +12,44 @@ using UnityEngine.UIElements;
 
 namespace ChangeSkin
 {
+    /// summary
+    /// Main ChangeSkin component which handles replacement and skin storage.
     public class ChangeBody : MonoBehaviour, IDisposable
     {
         Body body;
         TextureStorage textureStorage = new();
         ChangeFacialExpression changeFacialExpression = new();
         string skinName;
+        string loadedName;
+        string skinURL;
+        bool loaded = false;
         public bool working = false;
+        public bool isLocal = false;
 
-        // internal void LoadFromServer(string skinName)
-        // {
-        //     // this.skinName = skinName;
-        // }
-
-        public void LoadSkin(string skinName)
+        public void LoadSkinLocal(string skinName)
         {
+            loaded = false;
             this.skinName = skinName;
-            try
-            {
-                textureStorage.newBodySprites.Clear();
-                SkinLoader.LoadFromFolder(skinName, filenames, ref textureStorage.newBodySprites);
-            }
-            catch (Exception e)
-            {
-                throw (e);
-            }
+            isLocal = true;
+            SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
+            loadedName = skinName;
+            loaded = true;
         }
+
+        public void LoadSkinURL(string url, string skinName)
+        {
+            loaded = false;
+            string archiveName = SkinLoader.DownloadRemote(url);
+            SkinLoader.UnpackRemote(skinName, archiveName);
+            skinURL=url;
+            this.skinName = skinName;
+            isLocal = false;
+            SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
+            loadedName = skinName;
+            loaded = true;
+        }
+
+        private void OnSkinLoad() { }
 
         // internal void LoadFromURL(string url)
         // {
@@ -46,16 +58,21 @@ namespace ChangeSkin
 
         public void BeginReplacement()
         {
+            if (!loaded)
+                return;
             if (body == null)
                 body = gameObject.GetComponent<Body>();
-            if (skinName == null)
-            {
-                Plugin.Instance.Logger.LogInfo("No skin for body selected");
-                return;
-            }
-            ;
             if (textureStorage.newBodySprites.Count == 0)
-                LoadSkin(skinName);
+            {
+                if (isLocal)
+                {
+                    LoadSkinLocal(skinName);
+                }
+                else
+                {
+                    LoadSkinURL(skinURL, skinName);
+                }
+            }
             if (textureStorage.oldBodySprites.Count == 0)
                 SaveOriginalSprites();
             changeFacialExpression.SwapFacialExpression(
@@ -65,11 +82,14 @@ namespace ChangeSkin
             working = true;
         }
 
-        private void Start() { }
+        private void Start()
+        {
+            body = gameObject.GetComponent<Body>();
+        }
 
         private void Update()
         {
-            if (working)
+            if (loaded && working)
             {
                 StartCoroutine(ReplaceSprites());
             }
@@ -77,13 +97,12 @@ namespace ChangeSkin
 
         public void StopReplacement()
         {
+            working = false;
             StopAllCoroutines();
             ReturnSprites();
             changeFacialExpression.UnSwapFacialExpression(
                 body.GetComponentInChildren<FacialExpression>()
             );
-            working = false;
-            StopCoroutine(ReplaceSprites());
         }
 
         public void Dispose()
@@ -135,6 +154,10 @@ namespace ChangeSkin
                 SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
             )
             {
+                if (spriteRenderer.sprite == null)
+                {
+                    continue;
+                }
                 if (
                     textureStorage.oldBodySprites.TryGetValue(
                         spriteRenderer.sprite.name,

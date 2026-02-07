@@ -7,7 +7,8 @@ using UnityEngine;
 
 namespace ChangeSkin
 {
-    // Yuck!
+    /// summary
+    /// class that handles facial expression replacement
     internal class ChangeFacialExpression
     {
         List<Sprite> facialSprites = new List<Sprite>();

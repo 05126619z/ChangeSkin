@@ -1,46 +1,81 @@
-// using System;
-// using KrokoshaCasualtiesMP;
-// using Unity.Netcode;
-// using UnityEngine;
+using System;
+using System.Collections.Generic;
+using KrokoshaCasualtiesMP;
+using Unity.Collections;
+using Unity.Netcode;
+using UnityEngine;
 
-// namespace ChangeSkin;
+namespace ChangeSkin;
 
-// public class ChangeSkinNetworkComponent : MonoBehaviour
-// {
-//     private static bool server_has_changeskin = false;
+public class ChangeSkinNetworkComponent : MonoBehaviour
+{
+    [ServerKrokoshaReciever("ChangeSkinInitMessage")]
+    private static void Server_ChangeSkinInitMessage(ulong clientId, ref FastBufferReader reader)
+    {
+        if (ChangeSkinMonoBehaviour.initialized)
+        {
+            {
+                string skin;
+                reader.ReadValueSafe(out skin, false);
+                foreach (
+                    KeyValuePair<
+                        ulong,
+                        ChangeBody
+                    > keyValuePair in ChangeSkinMonoBehaviour.replacers
+                )
+                {
+                    FastBufferWriter fastBufferWriter = new FastBufferWriter(256, Allocator.Temp);
+                    fastBufferWriter.WriteValueSafe(keyValuePair.Key);
+                    fastBufferWriter.WriteValueSafe(keyValuePair.Value.name);
+                    NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
+                        "ChangeSkinClientSkinUpdate",
+                        clientId,
+                        fastBufferWriter
+                    );
+                    fastBufferWriter.Dispose();
+                }
+            }
+        }
+    }
 
-//     private void Start()
-//     {
-//         if(KrokoshaScavMultiplayer.is_client)
+    [ClientKrokoshaReciever("ChangeSkinClientSkinUpdate")]
+    private static void Client_ChangeSkinClientSkinUpdate(ulong _, ref FastBufferReader reader)
+    {
+        if (ChangeSkinMonoBehaviour.initialized)
+        {
+            ulong id;
+            string url;
+            string skinName;
+            reader.ReadValueSafe(out id);
+            reader.ReadValueSafe(out url);
+            reader.ReadValueSafe(out skinName);
+            ChangeSkinMonoBehaviour.replacers[id].LoadSkinURL(url, skinName);
+        }
+    }
 
-//         TimeScaleIndependentInvokeRepeatingStatic.AddFunc(
-//             new Action(SkinSync),
-//             0.4067f,
-//             5f,
-//             false,
-//             "FluidTilemapSyncUpdate",
-//             false
-//         );
-//     }
+    [ServerKrokoshaReciever("ChangeSkinLocalSkinSend")]
+    private static void Server_LocalSkinReciever(ulong clientId, ref FastBufferReader reader)
+    {
+        if (ChangeSkinMonoBehaviour.initialized)
+        {
+            string url;
+            string skinName;
+            reader.ReadValueSafe(out url);
+            reader.ReadValueSafe(out skinName);
+            SkinLoader.DownloadRemote(url);
+            ChangeSkinMonoBehaviour.replacers[clientId].LoadSkinURL(url, skinName);
+        }
+    }
 
-//     private static void SkinSync()
-//     {
-
-//     }
-
-
-
-//     [ServerKrokoshaReciever("ChangeSkinServerFirstCall")]
-//     private static void ChangeSkinServerFirstCall(ulong clientId, ref FastBufferReader reader) 
-//     {
-//         ScavClientInstance scavClientInstance;
-//         Body body;
-//         if (ScavClientInstance.TryGetScavClientInstanceAndBodyFromClientId(clientId, out scavClientInstance, out body))
-//         {
-//             body.gameObject.AddComponent<ChangeBody>();
-//             KrokoshaScavMultiplayer.Server_SendRelayMessageToClients("CurrentSkinRequest", clientId);
-//         }
-//     }
-
-//     [ClientKrokoshaReciever]
-// }
+    [ClientKrokoshaReciever("ChangeSkinLocalSkinRequest")]
+    private static void Client_LocalSkinRequest(ulong _, ref FastBufferReader reader)
+    {
+        if (ChangeSkinMonoBehaviour.initialized)
+        {
+            KrokoshaScavMultiplayer.Client_SendSimpleMessageToServer(
+                "ChangeSkinLocalSkinSend",
+                ChangeSkinMonoBehaviour.localSkin
+            );
+        }
+    }
+}

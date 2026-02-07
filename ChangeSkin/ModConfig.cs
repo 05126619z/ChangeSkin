@@ -1,27 +1,30 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 [Serializable]
 public class ModConfig
 {
-    private string selectedSkin = "robot";
+    private string lastSelectedSkin;
+    private string lastURL;
 
-    public string SelectedSkin
+    public string LastSelectedSkin
     {
-        get => selectedSkin;
+        get => lastSelectedSkin;
         set
         {
-            if (selectedSkin != value)
+            if (lastSelectedSkin != value)
             {
-                selectedSkin = value;
+                lastSelectedSkin = value;
             }
         }
     }
 
     public void Save(string filePath)
     {
-        string json = JsonUtility.ToJson(this, true);
+        string json = Newtonsoft.Json.JsonConvert.SerializeObject(this);
         File.WriteAllText(filePath, json);
     }
 
@@ -35,6 +38,6 @@ public class ModConfig
         }
 
         string json = File.ReadAllText(filePath);
-        return JsonUtility.FromJson<ModConfig>(json);
+        return Newtonsoft.Json.JsonConvert.DeserializeObject<ModConfig>(json);
     }
 }

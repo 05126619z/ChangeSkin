@@ -23,10 +23,10 @@ namespace ChangeSkin
                 newTexture.LoadImage(bytes);
                 newTexture.filterMode = FilterMode.Point;
             }
-            catch (Exception e)
+            catch
             {
                 newTexture = Resources.Load<Texture2D>("WarningSign");
-                throw(e);
+                throw;
             }
             return newTexture;
         }
@@ -46,10 +46,10 @@ namespace ChangeSkin
                     SpriteMeshType.Tight
                 );
             }
-            catch (Exception e)
+            catch
             {
                 outSprite = Resources.Load<Sprite>("WarningSign");
-                throw(e);
+                throw;
             }
             return outSprite;
         }

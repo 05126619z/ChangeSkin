@@ -38,7 +38,7 @@ namespace ChangeSkin
             }
             SingletonObject = new("ChangeSkinGameObject");
             SingletonObject.AddComponent<ChangeSkinMonoBehaviour>();
-            // SingletonObject.AddComponent<ChangeSkinNetworkComponent>();
+            SingletonObject.AddComponent<ChangeSkinNetworkComponent>();
             DontDestroyOnLoad(SingletonObject);
             ScavHook.ConsoleManager.AddCommand("skin", args => ChangeSkinMonoBehaviour.ToggleReplacement(args));
             Logger.LogInfo($"Plugin {ModName} is loaded!");
