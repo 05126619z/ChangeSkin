@@ -36,14 +36,25 @@ namespace ChangeSkin
             loaded = true;
         }
 
+        public void UploadLocalSkin(string skinName, string uploadUrl)
+        {
+            SkinLoader.UpdateLocalSkin(skinName);
+            SkinLoader.UploadLocal(skinName, uploadUrl);
+        }
+
+        public void LoadSkinURL(string url)
+        {
+            LoadSkinURL(url, Utils.GenerateRandomString(10));
+        }
+
         public void LoadSkinURL(string url, string skinName)
         {
+            this.skinName = skinName;
+            skinURL = url;
             loaded = false;
+            isLocal = false;
             string archiveName = SkinLoader.DownloadRemote(url);
             SkinLoader.UnpackRemote(skinName, archiveName);
-            skinURL=url;
-            this.skinName = skinName;
-            isLocal = false;
             SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
             loaded = true;
@@ -70,7 +81,7 @@ namespace ChangeSkin
                 }
                 else
                 {
-                    LoadSkinURL(skinURL, skinName);
+                    LoadSkinURL(skinURL);
                 }
             }
             if (textureStorage.oldBodySprites.Count == 0)

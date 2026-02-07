@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using BepInEx;
@@ -15,33 +17,35 @@ namespace ChangeSkin;
 
 internal static class SkinLoader
 {
-    public static IEnumerator LoadSkinAsync(
-        string skinName,
-        string[] filenames,
-        bool isLocal,
-        Action<Dictionary<string, Sprite>> callback
-    )
-    {
-        Dictionary<string, Sprite> dict = new();
-        foreach (string filename in filenames)
-        {
-            string workPath;
-            if (isLocal)
-            {
-                UpdateFromLocal(skinName);
-                workPath = Path.GetTempPath() + $"/ChangeSkin/local/{skinName}/Textures/{filename}";
-            }
-            else
-            {
-                workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}/Textures/{filename}";
-            }
-            Sprite sprite = Utils.LoadSprite(workPath);
-            sprite.name=Path.GetFileNameWithoutExtension(filename);
-            dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
-            yield return null;
-        }
-        callback?.Invoke(dict);
-    }
+    // public static IEnumerator LoadSkinAsync(
+    //     string skinName,
+    //     string[] filenames,
+    //     bool isLocal,
+    //     Action<Dictionary<string, Sprite>> callback
+    // )
+    // {
+    //     Dictionary<string, Sprite> dict = new();
+    //     string workPath;
+    //     if (isLocal)
+    //     {
+    //         UpdateFromLocal(skinName);
+    //         workPath = Path.GetTempPath() + $"/ChangeSkin/local/{skinName}";
+    //     }
+    //     else
+    //     {
+    //         workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}";
+    //         string skinDir = Directory.GetDirectories(workPath)[0];
+    //         workPath = workPath + "/" + skinDir;
+    //     }
+    //     foreach (string filename in filenames)
+    //     {
+    //         Sprite sprite = Utils.LoadSprite(workPath + "/" + filename);
+    //         sprite.name = Path.GetFileNameWithoutExtension(filename);
+    //         dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
+    //         yield return null;
+    //     }
+    //     callback?.Invoke(dict);
+    // }
 
     public static void LoadSkin(
         string skinName,
@@ -50,23 +54,25 @@ internal static class SkinLoader
         ref Dictionary<string, Sprite> dict
     )
     {
+        string workPath;
+        dict = [];
+        if (isLocal)
+        {
+            UpdateLocalSkin(skinName);
+            workPath = Path.GetTempPath() + $"/ChangeSkin/local/{skinName}";
+        }
+        else
+        {
+            workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}";
+            workPath = Directory.GetDirectories(workPath).Single();
+        }
         foreach (string filename in filenames)
         {
-            string workPath;
-            if (isLocal)
-            {
-                UpdateFromLocal(skinName);
-                workPath = Path.GetTempPath() + $"/ChangeSkin/local/{skinName}/Textures/{filename}";
-            }
-            else
-            {
-                workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}/Textures/{filename}";
-            }
-            Sprite sprite = Utils.LoadSprite(workPath);
-            sprite.name=Path.GetFileNameWithoutExtension(filename);
+            Sprite sprite = Utils.LoadSprite(workPath + "/Textures/" + filename);
+            sprite.name = Path.GetFileNameWithoutExtension(filename);
             dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
         }
-        }
+    }
 
     public static void UpdateLocalSkin(string skinName)
     {
@@ -100,6 +106,36 @@ internal static class SkinLoader
         );
     }
 
+    public static string UploadLocal(string skinName, string uploadUrl)
+    {
+        string workPath = Path.GetTempPath() + "/ChangeSkin/zips/local";
+        string filePath = workPath + $"/{skinName}.zip";
+        Uri uri = new(uploadUrl);
+        byte[] fileBytes = File.ReadAllBytes(filePath);
+        using (HttpClient client = new HttpClient())
+        using (var formData = new MultipartFormDataContent())
+        {
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(
+                "application/zip"
+            );
+            formData.Add(fileContent, "file", Path.GetFileName(filePath));
+            HttpResponseMessage response = client.PostAsync(uploadUrl, formData).Result;
+
+            if (response.StatusCode == HttpStatusCode.Created)
+            {
+                string result = response.Headers.GetValues("Location").FirstOrDefault();
+                Plugin.Instance.Logger.LogInfo(result);
+                return result;
+            }
+            else
+            {
+                Plugin.Instance.Logger.LogWarning("Wrong responce: " + response.Content.ReadAsStringAsync().Result);
+            }
+        }
+        return null;
+    }
+
     public static string DownloadRemote(string url)
     {
         string workPath = Path.GetTempPath() + "/ChangeSkin/zips/remote";
@@ -119,7 +155,12 @@ internal static class SkinLoader
         {
             using (var s = client.GetStreamAsync(url).GetAwaiter().GetResult())
             {
-                using (var fs = new FileStream(workPath + "/" + fileName+".zip", FileMode.OpenOrCreate))
+                using (
+                    var fs = new FileStream(
+                        workPath + "/" + fileName + ".zip",
+                        FileMode.OpenOrCreate
+                    )
+                )
                 {
                     s.CopyTo(fs);
                 }
@@ -132,34 +173,15 @@ internal static class SkinLoader
     public static void UnpackRemote(string skinName, string archiveName)
     {
         string workPath = Path.GetTempPath() + "/ChangeSkin/remote";
-        if (!Directory.Exists(workPath))
-            Directory.CreateDirectory(workPath);
-        if (Directory.Exists($"{workPath}/{skinName}"))
-            Directory.Delete($"{workPath}/{skinName}", true);
-        ZipFile.ExtractToDirectory(Path.GetTempPath() + $"/ChangeSkin/zips/remote/{archiveName}.zip", workPath);
+        if (!Directory.Exists(workPath + "/" + skinName))
+            Directory.CreateDirectory(workPath + "/" + skinName);
+        ZipFile.ExtractToDirectory(
+            Path.GetTempPath() + $"/ChangeSkin/zips/remote/{archiveName}.zip",
+            workPath + "/" + skinName
+        );
+        // if (Directory.Exists($"{workPath}/{skinName}"))
+        //     Directory.Delete($"{workPath}/{skinName}", true);
     }
-
-    // public static void UploadLocal(string skinName)
-    // {
-    //     string workPath = Path.GetTempPath() + "/ChangeSkin/zips/local";
-    //     string filePath = workPath + $"{skinName}.zip";
-
-    //     MultipartFormDataContent content = new();
-    //     byte[] signature = Plugin.ModConfig.SignFile(filePath);
-    //     byte[] zipBytes = File.ReadAllBytes(filePath);
-
-    //     ByteArrayContent fileContent = new ByteArrayContent(zipBytes);
-    //     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
-    //         "application/zip"
-    //     );
-
-    //     string signatureBase64 = Convert.ToBase64String(signature);
-    //     content.Add(new StringContent(signatureBase64, Encoding.UTF8), "signature");
-
-    //     byte[] publicKey = Plugin.ModConfig.GetPublicKey();
-    //     string publicKeyBase64 = Convert.ToBase64String(publicKey);
-    //     content.Add(new StringContent(publicKeyBase64, Encoding.UTF8), "publicKey");
-    // }
 
     private static void CopyFolderRecuresively(string sourceFolder, string destFolder)
     {

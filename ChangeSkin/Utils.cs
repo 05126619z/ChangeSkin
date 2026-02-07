@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Video;
+using Random = System.Random;
 
 namespace ChangeSkin
 {
@@ -25,7 +26,7 @@ namespace ChangeSkin
             }
             catch
             {
-                newTexture = Resources.Load<Texture2D>("WarningSign");
+                Plugin.Instance.Logger.LogWarning($"Failed to load texture at: {path}");
                 throw;
             }
             return newTexture;
@@ -48,12 +49,20 @@ namespace ChangeSkin
             }
             catch
             {
-                outSprite = Resources.Load<Sprite>("WarningSign");
+                Plugin.Instance.Logger.LogWarning($"Failed to load sprite at: {path}");
                 throw;
             }
             return outSprite;
         }
-        
+
+        public static string GenerateRandomString(int length = 10)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(
+                Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray()
+            );
+        }
 
         // public static async Task<AudioClip> LoadAudio(string path)
         // {

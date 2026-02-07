@@ -19,7 +19,7 @@ namespace ChangeSkin
 
         internal new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
-        public static ModConfig ModConfig;
+        public ModConfig ModConfig;
         public static Plugin Instance { get; private set; } = null!;
         public static GameObject SingletonObject;
 
@@ -42,6 +42,11 @@ namespace ChangeSkin
             DontDestroyOnLoad(SingletonObject);
             ScavHook.ConsoleManager.AddCommand("skin", args => ChangeSkinMonoBehaviour.ToggleReplacement(args));
             Logger.LogInfo($"Plugin {ModName} is loaded!");
+        }
+
+        public void SaveConfig()
+        {
+            ModConfig.Save(Paths.PluginPath + "/ChangeSkin/settings.json");
         }
     }
 }

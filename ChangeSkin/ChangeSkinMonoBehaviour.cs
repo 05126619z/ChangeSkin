@@ -28,8 +28,8 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
     public static void FirstInit()
     {
-        if (Plugin.ModConfig.LastSelectedSkin != null)
-            localSkin = Plugin.ModConfig.LastSelectedSkin;
+        if (Plugin.Instance.ModConfig.LastSelectedSkin != null)
+            localSkin = Plugin.Instance.ModConfig.LastSelectedSkin;
         localBody = PlayerCamera.main.body;
 
         if (!KrokoshaScavMultiplayer.network_system_is_running)
@@ -150,9 +150,10 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
                 return "Usage: skin select <Folder with skin>";
 
             string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
-            Plugin.ModConfig.LastSelectedSkin = args[2];
+            Plugin.Instance.ModConfig.LastSelectedSkin = args[2];
             localSkin = args[2];
             SkinSelect(localChangeBody, args[2]);
+            Plugin.Instance.SaveConfig();
             return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";
         }
 
