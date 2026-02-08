@@ -17,9 +17,9 @@ namespace ChangeSkin
         public const string ModName = "ChangeSkin";
         public const string ModVersion = "2.0.0";
 
-        internal new ManualLogSource Logger;
+        internal static new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
-        public ModConfig ModConfig;
+        public static ModConfig ModConfig;
         public static Plugin Instance { get; private set; } = null!;
         public static GameObject SingletonObject;
 
@@ -40,7 +40,10 @@ namespace ChangeSkin
             SingletonObject.AddComponent<ChangeSkinMonoBehaviour>();
             SingletonObject.AddComponent<ChangeSkinNetworkComponent>();
             DontDestroyOnLoad(SingletonObject);
-            ScavHook.ConsoleManager.AddCommand("skin", args => ChangeSkinMonoBehaviour.ToggleReplacement(args));
+            ScavHook.ConsoleManager.AddCommand(
+                "skin",
+                args => ChangeSkinMonoBehaviour.ToggleReplacement(args)
+            );
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
 

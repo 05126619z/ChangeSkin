@@ -7,20 +7,10 @@ using UnityEngine;
 [Serializable]
 public class ModConfig
 {
-    private string lastSelectedSkin;
-    private string lastURL;
-
-    public string LastSelectedSkin
-    {
-        get => lastSelectedSkin;
-        set
-        {
-            if (lastSelectedSkin != value)
-            {
-                lastSelectedSkin = value;
-            }
-        }
-    }
+    public string LastSelectedSkin;
+    public string LastURL;
+    public bool SkinUploading = true;
+    public bool SkinDownloading = true;
 
     public void Save(string filePath)
     {

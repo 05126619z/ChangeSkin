@@ -22,25 +22,24 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
     static string ip;
     static string port;
 
-    public static string localSkin;
-    public static Dictionary<ulong, ChangeBody> replacers = new();
+    public static Dictionary<ulong, ChangeBody> replacers;
     public static bool initialized = false;
+    public static new bool enabled = false;
 
     public static void FirstInit()
     {
-        if (Plugin.Instance.ModConfig.LastSelectedSkin != null)
-            localSkin = Plugin.Instance.ModConfig.LastSelectedSkin;
+        replacers = [];
         localBody = PlayerCamera.main.body;
-
+        localNetworkComponent = Plugin.SingletonObject.GetComponent<ChangeSkinNetworkComponent>();
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
             localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
+            replacers[0] = localChangeBody;
         }
         else
         {
             localScavInstance = ScavClientInstance.local_scavclientinstance;
-            scavClientInstances =
-                ScavMultiClientSynchronizer.ClientIdToScavClientInstanceDict.Values.ToList<ScavClientInstance>();
+            scavClientInstances = ScavMultiGlobalSynchronizer.GetAllLivingPlayers();
             foreach (ScavClientInstance scavClientInstance in scavClientInstances)
             {
                 ChangeBody changeBody =
@@ -62,8 +61,11 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             //     ChangeSkinClientDisconnect
             // );
         }
-        if (localSkin != null)
-            SkinSelect(localChangeBody, localSkin);
+
+        if (Plugin.ModConfig.LastSelectedSkin != null)
+            SkinSelectLocal(localChangeBody, Plugin.ModConfig.LastSelectedSkin);
+        if (Plugin.ModConfig.LastURL != null)
+            SkinSelectRemote(localChangeBody, Plugin.ModConfig.LastURL);
 
         ip = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[0];
         port = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[1];
@@ -72,14 +74,18 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
     private static void OnSceneUnloaded(Scene scene)
     {
+        Destructor();
+    }
+
+    private static void Destructor()
+    {
         initialized = false;
         localScavInstance = null;
         localChangeBody = null;
         scavClientInstances = null;
         localScavInstance = null;
         localBody = null;
-        replacers = null;
-        // Really retarded solution by keeping everything static, but idgaf so thats my destructor
+        replacers = [];
     }
 
     private static void ChangeSkinClientConnect(ulong clientId)
@@ -110,9 +116,14 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         localChangeBody.StopReplacement();
     }
 
-    public static void SkinSelect(ChangeBody changeBody, string skinName)
+    public static void SkinSelectLocal(ChangeBody changeBody, string skinName)
     {
         changeBody.LoadSkinLocal(skinName);
+    }
+
+    public static void SkinSelectRemote(ChangeBody changeBody, string url)
+    {
+        changeBody.LoadSkinURL(url);
     }
 
     public static void ChangeSkinReload()
@@ -137,36 +148,175 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             FirstInit();
 
         string helpMessage =
-            "enable to toggle ON, disable to toggle OFF, reload to reload, select <skin name> to select skin";
+            " skin load local {skinName}\n skin load remote {skinURL}\n skin rule set/get skinuploading true/false\n skin rule set/get skindownloading true/false\n skin ban/unban {playername}\n skin enable/disable\n skin reload\n skin clearcache";
+        string returnmessage = helpMessage;
 
         if (args.Length == 1)
-            return helpMessage;
+            return returnmessage;
 
         string command = args[1];
 
-        if (command == "select")
+        if (command == "load" && args.Length == 4)
         {
-            if (args.Length < 3)
-                return "Usage: skin select <Folder with skin>";
-
-            string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
-            Plugin.Instance.ModConfig.LastSelectedSkin = args[2];
-            localSkin = args[2];
-            SkinSelect(localChangeBody, args[2]);
-            Plugin.Instance.SaveConfig();
-            return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";
+            if (args[2] == "local")
+            {
+                SkinSelectLocal(localChangeBody, args[3]);
+                Plugin.ModConfig.LastSelectedSkin = args[3];
+                returnmessage = $"Local skin {args[3]} loaded";
+            }
+            if (args[2] == "remote")
+            {
+                SkinSelectRemote(localChangeBody, args[3]);
+                Plugin.ModConfig.LastURL = args[3];
+                returnmessage = $"Remote skin {args[3]} loaded";
+            }
         }
 
-        if (localSkin == null)
-            return "Select skin first";
-
-        return command switch
+        if (command == "rule" && args.Length == 5)
         {
-            "enable" => ExecuteWithConfig(ChangeSkinEnable, "Texture replacement ON"),
-            "disable" => ExecuteWithConfig(ChangeSkinDisable, "Texture replacement OFF"),
-            "reload" => ExecuteWithConfig(ChangeSkinReload, "Textures reloaded"),
-            _ => helpMessage,
-        };
+            if (args[2] == "set")
+            {
+                if (args[3] == "skinuploading")
+                {
+                    try
+                    {
+                        Plugin.ModConfig.SkinUploading = bool.Parse(args[4]);
+                        returnmessage = $"Skin uploading is now {Plugin.ModConfig.SkinUploading}";
+                    }
+                    catch (Exception e)
+                    {
+                        returnmessage = $"Error: {e}";
+                    }
+                }
+                if (args[3] == "skindownloading")
+                {
+                    try
+                    {
+                        Plugin.ModConfig.SkinDownloading = bool.Parse(args[4]);
+                        returnmessage =
+                            $"Skin downloading is now {Plugin.ModConfig.SkinDownloading}";
+                    }
+                    catch (Exception e)
+                    {
+                        returnmessage = $"Error: {e}";
+                    }
+                }
+            }
+            if (args[2] == "get")
+            {
+                if (args[3] == "skinuploading")
+                {
+                    returnmessage = $"Skin uploading is set to {Plugin.ModConfig.SkinUploading}";
+                }
+                if (args[3] == "skindownloading")
+                {
+                    returnmessage =
+                        $"Skin downloading is set to {Plugin.ModConfig.SkinDownloading}";
+                }
+            }
+        }
+
+        if (command == "ban" && args.Length == 3)
+        {
+            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+            {
+                if (scavClientInstance.name == args[2])
+                {
+                    ChangeBody changeBody =
+                        scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+                    changeBody.isBanned = true;
+                    returnmessage = $"{scavClientInstance.name} is now skinbanned";
+                    break;
+                }
+                else
+                    returnmessage = $"{args[2]} not found";
+            }
+        }
+
+        if (command == "unban" && args.Length == 3)
+        {
+            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+            {
+                if (scavClientInstance.name == args[2])
+                {
+                    ChangeBody changeBody =
+                        scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+                    changeBody.isBanned = false;
+                    returnmessage = $"{scavClientInstance.name} is now skinpardoned";
+                    break;
+                }
+                else
+                    returnmessage = $"{args[2]} not found";
+            }
+        }
+
+        if (command == "enable")
+        {
+            enabled = true;
+            foreach (ChangeBody changeBody in replacers.Values)
+            {
+                changeBody.BeginReplacement();
+            }
+            returnmessage = "ChangeSkin enabled";
+            if (Plugin.ModConfig.LastSelectedSkin == null)
+                returnmessage = "Skin for self not selected \notherwise everything is ok";
+        }
+
+        if (command == "disable")
+        {
+            enabled = false;
+            foreach (ChangeBody changeBody in replacers.Values)
+            {
+                changeBody.StopReplacement();
+            }
+            returnmessage = "ChangeSkin disabled";
+        }
+
+        if (command == "reload")
+        {
+            foreach (ChangeBody changeBody in replacers.Values)
+            {
+                changeBody.Reload();
+            }
+            returnmessage = "ChangeSkin reloaded";
+        }
+
+        if (command == "clearcache")
+        {
+            SkinLoader.ClearCache();
+            returnmessage = "Cache cleared";
+        }
+
+        Plugin.Logger.LogInfo(returnmessage);
+        return returnmessage;
+
+        // if (command == "select")
+        // {
+        //     if (args.Length < 3)
+        //         return "Usage: skin select <Folder with skin>";
+
+        //     string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
+        //     Plugin.ModConfig.LastSelectedSkin = args[2];
+        //     SkinSelect(localChangeBody, args[2]);
+        //     Plugin.Instance.SaveConfig();
+        //     return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";
+        // }
+
+        // if (Plugin.ModConfig.LastSelectedSkin == null)
+        //     return "Select skin first";
+
+        // if (command == "enable")
+        // {
+        //     ChangeSkinEnable();
+        // }
+
+        // return command switch
+        // {
+        //     "enable" => ExecuteWithConfig(ChangeSkinEnable, "Texture replacement ON"),
+        //     "disable" => ExecuteWithConfig(ChangeSkinDisable, "Texture replacement OFF"),
+        //     "reload" => ExecuteWithConfig(ChangeSkinReload, "Textures reloaded"),
+        //     _ => helpMessage,
+        // };
     }
 
     private static string ExecuteWithConfig(Action action, string successMessage)

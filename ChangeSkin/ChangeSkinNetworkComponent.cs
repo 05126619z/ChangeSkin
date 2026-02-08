@@ -72,10 +72,10 @@ public class ChangeSkinNetworkComponent : MonoBehaviour
     {
         if (ChangeSkinMonoBehaviour.initialized)
         {
-            KrokoshaScavMultiplayer.Client_SendSimpleMessageToServer(
-                "ChangeSkinLocalSkinSend",
-                ChangeSkinMonoBehaviour.localSkin
-            );
+            // KrokoshaScavMultiplayer.Client_SendSimpleMessageToServer(
+            //     "ChangeSkinLocalSkinSend",
+            //     ChangeSkinMonoBehaviour.localSkin
+            // );
         }
     }
 }

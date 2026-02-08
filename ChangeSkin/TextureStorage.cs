@@ -9,7 +9,7 @@ namespace ChangeSkin
 {
     internal class TextureStorage
     {
-        internal Dictionary<string, Sprite> newBodySprites = new();
-        internal Dictionary<string, Sprite> oldBodySprites = new();
+        internal Dictionary<string, Sprite> newBodySprites = [];
+        internal Dictionary<string, Sprite> oldBodySprites = [];
     }
 }

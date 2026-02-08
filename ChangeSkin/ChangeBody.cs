@@ -23,23 +23,19 @@ namespace ChangeSkin
         string loadedName;
         string skinURL;
         bool loaded = false;
-        public bool working = false;
-        public bool isLocal = false;
+        bool working = false;
+        bool isLocal = true;
+        public bool isBanned = false;
 
         public void LoadSkinLocal(string skinName)
         {
             loaded = false;
             this.skinName = skinName;
             isLocal = true;
+            textureStorage.newBodySprites = [];
             SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
             loaded = true;
-        }
-
-        public void UploadLocalSkin(string skinName, string uploadUrl)
-        {
-            SkinLoader.UpdateLocalSkin(skinName);
-            SkinLoader.UploadLocal(skinName, uploadUrl);
         }
 
         public void LoadSkinURL(string url)
@@ -49,27 +45,51 @@ namespace ChangeSkin
 
         public void LoadSkinURL(string url, string skinName)
         {
+            if (!Plugin.ModConfig.SkinDownloading)
+            {
+                Plugin.Logger.LogWarning("Skin downloading is disabled by the rules");
+                return;
+            }
             this.skinName = skinName;
             skinURL = url;
             loaded = false;
             isLocal = false;
             string archiveName = SkinLoader.DownloadRemote(url);
             SkinLoader.UnpackRemote(skinName, archiveName);
+            textureStorage.newBodySprites = [];
             SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
             loaded = true;
         }
 
-        private void OnSkinLoad() { }
+        public void Reload()
+        {
+            StopReplacement();
+            Unload();
+            if (isLocal)
+            {
+                LoadSkinLocal(skinName);
+            }
+            else
+            {
+                if (skinURL != null)
+                    LoadSkinURL(skinURL);
+            }
+            BeginReplacement();
+        }
 
-        // internal void LoadFromURL(string url)
-        // {
-
-        // }
+        public void Unload()
+        {
+            textureStorage = new();
+            loadedName = null;
+            loaded = false;
+        }
 
         public void BeginReplacement()
         {
-            if (!loaded)
+            if (!ChangeSkinMonoBehaviour.enabled || isBanned)
+                return;
+            if (skinName == null && skinURL == null)
                 return;
             if (body == null)
                 body = gameObject.GetComponent<Body>();
@@ -84,13 +104,24 @@ namespace ChangeSkin
                     LoadSkinURL(skinURL);
                 }
             }
-            if (textureStorage.oldBodySprites.Count == 0)
-                SaveOriginalSprites();
+            SaveOriginalSprites();
             changeFacialExpression.SwapFacialExpression(
                 body.GetComponentInChildren<FacialExpression>(),
                 textureStorage.newBodySprites
             );
             working = true;
+        }
+
+        public void StopReplacement()
+        {
+            if (!working)
+                return;
+            working = false;
+            StopAllCoroutines();
+            ReturnSprites();
+            changeFacialExpression.UnSwapFacialExpression(
+                body.GetComponentInChildren<FacialExpression>()
+            );
         }
 
         private void Start()
@@ -106,23 +137,15 @@ namespace ChangeSkin
             }
         }
 
-        public void StopReplacement()
-        {
-            working = false;
-            StopAllCoroutines();
-            ReturnSprites();
-            changeFacialExpression.UnSwapFacialExpression(
-                body.GetComponentInChildren<FacialExpression>()
-            );
-        }
-
         public void Dispose()
         {
             StopReplacement();
+            Unload();
         }
 
         internal void SaveOriginalSprites()
         {
+            textureStorage.oldBodySprites = [];
             foreach (
                 SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
             )
@@ -179,6 +202,17 @@ namespace ChangeSkin
                     spriteRenderer.sprite = originalSprite;
                 }
             }
+        }
+
+        public static void UploadLocalSkin(string skinName, string uploadUrl)
+        {
+            if (!Plugin.ModConfig.SkinUploading)
+            {
+                Plugin.Logger.LogWarning("Skin uploading is disabled by the rules");
+                return;
+            }
+            SkinLoader.UpdateLocalSkin(skinName);
+            SkinLoader.UploadLocal(skinName, uploadUrl);
         }
 
         static readonly string[] filenames =

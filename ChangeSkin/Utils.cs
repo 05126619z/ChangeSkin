@@ -26,7 +26,7 @@ namespace ChangeSkin
             }
             catch
             {
-                Plugin.Instance.Logger.LogWarning($"Failed to load texture at: {path}");
+                Plugin.Logger.LogWarning($"Failed to load texture at: {path}");
                 throw;
             }
             return newTexture;
@@ -49,7 +49,7 @@ namespace ChangeSkin
             }
             catch
             {
-                Plugin.Instance.Logger.LogWarning($"Failed to load sprite at: {path}");
+                Plugin.Logger.LogWarning($"Failed to load sprite at: {path}");
                 throw;
             }
             return outSprite;

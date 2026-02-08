@@ -55,7 +55,6 @@ internal static class SkinLoader
     )
     {
         string workPath;
-        dict = [];
         if (isLocal)
         {
             UpdateLocalSkin(skinName);
@@ -116,21 +115,21 @@ internal static class SkinLoader
         using (var formData = new MultipartFormDataContent())
         {
             var fileContent = new ByteArrayContent(fileBytes);
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue(
-                "application/zip"
-            );
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
             formData.Add(fileContent, "file", Path.GetFileName(filePath));
             HttpResponseMessage response = client.PostAsync(uploadUrl, formData).Result;
 
             if (response.StatusCode == HttpStatusCode.Created)
             {
                 string result = response.Headers.GetValues("Location").FirstOrDefault();
-                Plugin.Instance.Logger.LogInfo(result);
+                Plugin.Logger.LogInfo(result);
                 return result;
             }
             else
             {
-                Plugin.Instance.Logger.LogWarning("Wrong responce: " + response.Content.ReadAsStringAsync().Result);
+                Plugin.Logger.LogWarning(
+                    "Wrong responce: " + response.Content.ReadAsStringAsync().Result
+                );
             }
         }
         return null;
@@ -224,5 +223,11 @@ internal static class SkinLoader
         if (File.Exists(outPath))
             File.Delete(outPath);
         ZipFile.CreateFromDirectory(path, outPath);
+    }
+
+    public static void ClearCache()
+    {
+        if (Directory.Exists(Path.GetTempPath() + "/ChangeSkin"))
+            Directory.Delete(Path.GetTempPath() + "/ChangeSkin", true);
     }
 }
