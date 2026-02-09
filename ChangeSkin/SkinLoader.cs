@@ -63,17 +63,23 @@ internal static class SkinLoader
         else
         {
             workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}";
-            workPath = Directory.GetDirectories(workPath).Single();
         }
         foreach (string filename in filenames)
         {
-            Sprite sprite = Utils.LoadSprite(workPath + "/Textures/" + filename);
-            sprite.name = Path.GetFileNameWithoutExtension(filename);
-            dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
+            Sprite sprite;
+            try 
+            {
+                sprite = Utils.LoadSprite(workPath + "/" + filename);
+                dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
+            }
+            catch
+            {
+                Plugin.Logger.LogWarning("It seems that some files for the skin are either missing or located in wrong folder structure. Follow the robot template for correct skin loading");
+            }
         }
     }
 
-    public static void UpdateLocalSkin(string skinName)
+    internal static void UpdateLocalSkin(string skinName)
     {
         UpdateFromLocal(skinName);
         PackLocal(skinName);
@@ -105,7 +111,7 @@ internal static class SkinLoader
         );
     }
 
-    public static string UploadLocal(string skinName, string uploadUrl)
+    internal static string UploadLocal(string skinName, string uploadUrl)
     {
         string workPath = Path.GetTempPath() + "/ChangeSkin/zips/local";
         string filePath = workPath + $"/{skinName}.zip";
@@ -128,7 +134,7 @@ internal static class SkinLoader
             else
             {
                 Plugin.Logger.LogWarning(
-                    "Wrong responce: " + response.Content.ReadAsStringAsync().Result
+                    "Bad response from server: " + response.Content.ReadAsStringAsync().Result
                 );
             }
         }
@@ -171,15 +177,18 @@ internal static class SkinLoader
 
     public static void UnpackRemote(string skinName, string archiveName)
     {
-        string workPath = Path.GetTempPath() + "/ChangeSkin/remote";
-        if (!Directory.Exists(workPath + "/" + skinName))
-            Directory.CreateDirectory(workPath + "/" + skinName);
+        string targetPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "remote", skinName);
+        string zipPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "zips", "remote", $"{archiveName}.zip");
+        
+        if (Directory.Exists(targetPath))
+        Directory.Delete(targetPath, true);
+    
+        Directory.CreateDirectory(targetPath);
+
         ZipFile.ExtractToDirectory(
-            Path.GetTempPath() + $"/ChangeSkin/zips/remote/{archiveName}.zip",
-            workPath + "/" + skinName
+            zipPath,
+            targetPath
         );
-        // if (Directory.Exists($"{workPath}/{skinName}"))
-        //     Directory.Delete($"{workPath}/{skinName}", true);
     }
 
     private static void CopyFolderRecuresively(string sourceFolder, string destFolder)

@@ -14,106 +14,56 @@ namespace ChangeSkin;
 
 public class ChangeSkinMonoBehaviour : MonoBehaviour
 {
-    static ChangeSkinNetworkComponent localNetworkComponent;
-    static ScavClientInstance localScavInstance;
-    static Body localBody;
-    static ChangeBody localChangeBody;
-    static List<ScavClientInstance> scavClientInstances;
-    static string ip;
-    static string port;
+    public static PlayerBody localPlayerBody;
+    public static Body localBody;
+    public static ChangeBody localChangeBody;
+    public static List<PlayerBody> PlayerBodies = [];
 
-    public static Dictionary<ulong, ChangeBody> replacers;
+    public static Dictionary<ulong, ChangeBody> replacers = replacers = [];
     public static bool initialized = false;
     public static new bool enabled = false;
 
     public static void FirstInit()
     {
-        replacers = [];
-        localBody = PlayerCamera.main.body;
-        localNetworkComponent = Plugin.SingletonObject.GetComponent<ChangeSkinNetworkComponent>();
+        TextureStorage.SaveOGSprites();
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
+            localBody = PlayerCamera.main.body;
             localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
             replacers[0] = localChangeBody;
+            localChangeBody.isLocalChangeBody = true;
         }
         else
         {
-            localScavInstance = ScavClientInstance.local_scavclientinstance;
-            scavClientInstances = ScavMultiGlobalSynchronizer.GetAllLivingPlayers();
-            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
-            {
-                ChangeBody changeBody =
-                    scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
-                replacers.Add(
-                    ScavClientInstance.GetClientIdFromBody(scavClientInstance.body),
-                    changeBody
-                );
-                if (localScavInstance == scavClientInstance)
-                {
-                    localChangeBody = changeBody;
-                }
-            }
-            SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
-            // NetworkManager.Singleton.OnClientConnectedCallback += new Action<ulong>(
-            //     ChangeSkinClientConnect
-            // );
-            // NetworkManager.Singleton.OnClientDisconnectCallback += new Action<ulong>(
-            //     ChangeSkinClientDisconnect
-            // );
+            ChangeSkinNetworkComponent.RegisterServerRecievers();
+            ChangeSkinNetworkComponent.RegisterClientRecievers();
         }
 
-        if (Plugin.ModConfig.LastSelectedSkin != null)
-            SkinSelectLocal(localChangeBody, Plugin.ModConfig.LastSelectedSkin);
-        if (Plugin.ModConfig.LastURL != null)
-            SkinSelectRemote(localChangeBody, Plugin.ModConfig.LastURL);
-
-        ip = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[0];
-        port = KrokoshaScavMultiplayer.input_ipport_text.Split(':')[1];
+        switch (Plugin.ModConfig.lastSelected)
+        {
+            case ModConfig.LastSelected.Local:
+            {
+                if (Plugin.ModConfig.LastSelectedSkin != null)
+                    SkinSelectLocal(localChangeBody, Plugin.ModConfig.LastSelectedSkin);
+                break;
+            }
+            case ModConfig.LastSelected.Remote:
+            {
+                if (Plugin.ModConfig.LastURL != null)
+                    SkinSelectRemote(localChangeBody, Plugin.ModConfig.LastURL);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
         initialized = true;
     }
 
-    private static void OnSceneUnloaded(Scene scene)
+    public static void Destructor()
     {
-        Destructor();
-    }
-
-    private static void Destructor()
-    {
-        initialized = false;
-        localScavInstance = null;
-        localChangeBody = null;
-        scavClientInstances = null;
-        localScavInstance = null;
-        localBody = null;
         replacers = [];
-    }
-
-    private static void ChangeSkinClientConnect(ulong clientId)
-    {
-        ChangeBody changeBody = ScavClientInstance
-            .GetBodyFromClientId(clientId)
-            .gameObject.AddComponent<ChangeBody>();
-        replacers[clientId] = changeBody;
-    }
-
-    private static void ChangeSkinClientDisconnect(ulong clientId)
-    {
-        replacers.Remove(clientId);
-    }
-
-    public static void ChangeSkinEnable()
-    {
-        localChangeBody.BeginReplacement();
-        if (KrokoshaScavMultiplayer.IsNetworkActiveAndIsClient())
-        {
-            KrokoshaScavMultiplayer.Client_SendSimpleMessageToServer("ChangeSkinInitMessage");
-        }
-        else { }
-    }
-
-    public static void ChangeSkinDisable()
-    {
-        localChangeBody.StopReplacement();
     }
 
     public static void SkinSelectLocal(ChangeBody changeBody, string skinName)
@@ -124,12 +74,6 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
     public static void SkinSelectRemote(ChangeBody changeBody, string url)
     {
         changeBody.LoadSkinURL(url);
-    }
-
-    public static void ChangeSkinReload()
-    {
-        ChangeSkinEnable();
-        ChangeSkinDisable();
     }
 
     public static void Startcorout(IEnumerator f)
@@ -162,19 +106,31 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             {
                 SkinSelectLocal(localChangeBody, args[3]);
                 Plugin.ModConfig.LastSelectedSkin = args[3];
+                ChangeSkinNetworkComponent.SendLocalSkinMessage(args[3]);
                 returnmessage = $"Local skin {args[3]} loaded";
             }
             if (args[2] == "remote")
             {
-                SkinSelectRemote(localChangeBody, args[3]);
-                Plugin.ModConfig.LastURL = args[3];
-                returnmessage = $"Remote skin {args[3]} loaded";
+                if (!Plugin.ModConfig.SkinDownloading)
+                {
+                    returnmessage = "Skin downloading is disabled by the rules";
+                }
+                else
+                {
+                    SkinSelectRemote(localChangeBody, args[3]);
+                    Plugin.ModConfig.LastURL = args[3];
+                    ChangeSkinNetworkComponent.SendRemoteSkinMessage(
+                        args[3],
+                        localChangeBody.skinName
+                    );
+                    returnmessage = $"Remote skin {args[3]} loaded";
+                }
             }
         }
 
-        if (command == "rule" && args.Length == 5)
+        if (command == "rule")
         {
-            if (args[2] == "set")
+            if (args[2] == "set" && args.Length == 5)
             {
                 if (args[3] == "skinuploading")
                 {
@@ -202,7 +158,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
                     }
                 }
             }
-            if (args[2] == "get")
+            if (args[2] == "get" && args.Length == 4)
             {
                 if (args[3] == "skinuploading")
                 {
@@ -218,14 +174,13 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         if (command == "ban" && args.Length == 3)
         {
-            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+            foreach (PlayerBody playerBody in PlayerBodies)
             {
-                if (scavClientInstance.name == args[2])
+                if (playerBody.name == args[2])
                 {
-                    ChangeBody changeBody =
-                        scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
                     changeBody.isBanned = true;
-                    returnmessage = $"{scavClientInstance.name} is now skinbanned";
+                    returnmessage = $"{playerBody.name} is now skinbanned";
                     break;
                 }
                 else
@@ -235,14 +190,13 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         if (command == "unban" && args.Length == 3)
         {
-            foreach (ScavClientInstance scavClientInstance in scavClientInstances)
+            foreach (PlayerBody playerBody in PlayerBodies)
             {
-                if (scavClientInstance.name == args[2])
+                if (playerBody.name == args[2])
                 {
-                    ChangeBody changeBody =
-                        scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
                     changeBody.isBanned = false;
-                    returnmessage = $"{scavClientInstance.name} is now skinpardoned";
+                    returnmessage = $"{playerBody.name} is now skinpardoned";
                     break;
                 }
                 else
@@ -253,6 +207,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         if (command == "enable")
         {
             enabled = true;
+            ChangeSkinNetworkComponent.SendSkinEnabled();
             foreach (ChangeBody changeBody in replacers.Values)
             {
                 changeBody.BeginReplacement();
@@ -269,6 +224,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             {
                 changeBody.StopReplacement();
             }
+            ChangeSkinNetworkComponent.SendSkinDisabled();
             returnmessage = "ChangeSkin disabled";
         }
 
@@ -285,6 +241,11 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         {
             SkinLoader.ClearCache();
             returnmessage = "Cache cleared";
+        }
+
+        if (command == "verbose" && args.Length == 3)
+        {
+            Plugin.ModConfig.Verbose = bool.Parse(args[2]);
         }
 
         Plugin.Logger.LogInfo(returnmessage);

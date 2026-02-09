@@ -22,6 +22,7 @@ namespace ChangeSkin
         public static ModConfig ModConfig;
         public static Plugin Instance { get; private set; } = null!;
         public static GameObject SingletonObject;
+        
 
         public void Awake()
         {
@@ -38,7 +39,6 @@ namespace ChangeSkin
             }
             SingletonObject = new("ChangeSkinGameObject");
             SingletonObject.AddComponent<ChangeSkinMonoBehaviour>();
-            SingletonObject.AddComponent<ChangeSkinNetworkComponent>();
             DontDestroyOnLoad(SingletonObject);
             ScavHook.ConsoleManager.AddCommand(
                 "skin",

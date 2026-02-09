@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BepInEx;
+using KrokoshaCasualtiesMP;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,21 +20,27 @@ namespace ChangeSkin
         Body body;
         TextureStorage textureStorage = new();
         ChangeFacialExpression changeFacialExpression = new();
-        string skinName;
+        public string skinName;
         string loadedName;
         string skinURL;
         bool loaded = false;
         bool working = false;
         bool isLocal = true;
+
+        public bool isLocalChangeBody = false;
         public bool isBanned = false;
 
         public void LoadSkinLocal(string skinName)
         {
+            if (working)
+                StopReplacement();
+            if (loaded)
+                Unload();
             loaded = false;
             this.skinName = skinName;
             isLocal = true;
             textureStorage.newBodySprites = [];
-            SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
+            SkinLoader.LoadSkin(skinName, bodyfilenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
             loaded = true;
         }
@@ -45,19 +52,23 @@ namespace ChangeSkin
 
         public void LoadSkinURL(string url, string skinName)
         {
+            if (working)
+                StopReplacement();
+            if (loaded)
+                Unload();
+            this.skinName = skinName;
+            skinURL = url;
+            loaded = false;
+            isLocal = false;
             if (!Plugin.ModConfig.SkinDownloading)
             {
                 Plugin.Logger.LogWarning("Skin downloading is disabled by the rules");
                 return;
             }
-            this.skinName = skinName;
-            skinURL = url;
-            loaded = false;
-            isLocal = false;
             string archiveName = SkinLoader.DownloadRemote(url);
             SkinLoader.UnpackRemote(skinName, archiveName);
             textureStorage.newBodySprites = [];
-            SkinLoader.LoadSkin(skinName, filenames, isLocal, ref textureStorage.newBodySprites);
+            SkinLoader.LoadSkin(skinName, bodyfilenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
             loaded = true;
         }
@@ -72,15 +83,14 @@ namespace ChangeSkin
             }
             else
             {
-                if (skinURL != null)
-                    LoadSkinURL(skinURL);
+                LoadSkinURL(skinURL);
             }
             BeginReplacement();
         }
 
         public void Unload()
         {
-            textureStorage = new();
+            textureStorage.newBodySprites.Clear();
             loadedName = null;
             loaded = false;
         }
@@ -104,7 +114,6 @@ namespace ChangeSkin
                     LoadSkinURL(skinURL);
                 }
             }
-            SaveOriginalSprites();
             changeFacialExpression.SwapFacialExpression(
                 body.GetComponentInChildren<FacialExpression>(),
                 textureStorage.newBodySprites
@@ -143,23 +152,6 @@ namespace ChangeSkin
             Unload();
         }
 
-        internal void SaveOriginalSprites()
-        {
-            textureStorage.oldBodySprites = [];
-            foreach (
-                SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
-            )
-            {
-                if (!textureStorage.oldBodySprites.ContainsKey(spriteRenderer.sprite.name))
-                {
-                    textureStorage.oldBodySprites.Add(
-                        spriteRenderer.sprite.name,
-                        spriteRenderer.sprite
-                    );
-                }
-            }
-        }
-
         internal IEnumerator ReplaceSprites()
         {
             foreach (Sprite sprite in textureStorage.newBodySprites.Values)
@@ -193,7 +185,7 @@ namespace ChangeSkin
                     continue;
                 }
                 if (
-                    textureStorage.oldBodySprites.TryGetValue(
+                    TextureStorage.ogSprites.TryGetValue(
                         spriteRenderer.sprite.name,
                         out Sprite originalSprite
                     )
@@ -204,18 +196,18 @@ namespace ChangeSkin
             }
         }
 
-        public static void UploadLocalSkin(string skinName, string uploadUrl)
+        public static string UploadLocalSkin(string skinName, string uploadUrl)
         {
             if (!Plugin.ModConfig.SkinUploading)
             {
                 Plugin.Logger.LogWarning("Skin uploading is disabled by the rules");
-                return;
+                return null;
             }
             SkinLoader.UpdateLocalSkin(skinName);
-            SkinLoader.UploadLocal(skinName, uploadUrl);
+            return SkinLoader.UploadLocal(skinName, uploadUrl);
         }
 
-        static readonly string[] filenames =
+        internal static readonly string[] bodyfilenames =
         {
             "Body/experimentTail.png",
             "Body/experimentFoot.png",

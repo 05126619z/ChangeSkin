@@ -7,8 +7,16 @@ using UnityEngine;
 [Serializable]
 public class ModConfig
 {
+    public enum LastSelected : byte
+    {
+        Local,
+        Remote,
+    }
+
     public string LastSelectedSkin;
     public string LastURL;
+    public bool Verbose = false;
+    public LastSelected lastSelected = new();
     public bool SkinUploading = true;
     public bool SkinDownloading = true;
 

@@ -23,6 +23,7 @@ namespace ChangeSkin
                 byte[] bytes = File.ReadAllBytes(path);
                 newTexture.LoadImage(bytes);
                 newTexture.filterMode = FilterMode.Point;
+                newTexture.name = Path.GetFileNameWithoutExtension(path);
             }
             catch
             {
@@ -46,6 +47,7 @@ namespace ChangeSkin
                     0,
                     SpriteMeshType.Tight
                 );
+                outSprite.name = Path.GetFileNameWithoutExtension(path);
             }
             catch
             {
