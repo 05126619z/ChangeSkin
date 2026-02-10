@@ -58,23 +58,35 @@ internal static class SkinLoader
         if (isLocal)
         {
             UpdateLocalSkin(skinName);
-            workPath = Path.GetTempPath() + $"/ChangeSkin/local/{skinName}";
+            workPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "local", skinName);
         }
         else
         {
-            workPath = Path.GetTempPath() + $"/ChangeSkin/remote/{skinName}";
+            workPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "remote", skinName);
+            string[] dirNames = Directory.GetDirectories(workPath); // TODO: error here, fuck this shit kill yourself cant get one single directory
+            if (Plugin.ModConfig.Verbose)
+            {
+                foreach (string dirName in dirNames)
+                {
+                    Plugin.Logger.LogInfo(dirName);
+                }
+                workPath = dirNames[0];
+            }
         }
         foreach (string filename in filenames)
         {
             Sprite sprite;
-            try 
+            try
             {
                 sprite = Utils.LoadSprite(workPath + "/" + filename);
                 dict[Path.GetFileNameWithoutExtension(filename)] = sprite;
             }
             catch
             {
-                Plugin.Logger.LogWarning("It seems that some files for the skin are either missing or located in wrong folder structure. Follow the robot template for correct skin loading");
+                Plugin.Logger.LogWarning(
+                    "It seems that some files for the skin are either missing or located in wrong folder structure. Follow the robot template for correct skin loading"
+                );
+                throw;
             }
         }
     }
@@ -107,7 +119,9 @@ internal static class SkinLoader
             File.Delete($"{workPath}/{skinName}.zip");
         ZipFile.CreateFromDirectory(
             Path.GetTempPath() + $"/ChangeSkin/local/{skinName}",
-            $"{workPath}/{skinName}.zip"
+            $"{workPath}/{skinName}.zip",
+            System.IO.Compression.CompressionLevel.Fastest,
+            true
         );
     }
 
@@ -175,20 +189,23 @@ internal static class SkinLoader
         return Path.GetFileNameWithoutExtension(fileName);
     }
 
-    public static void UnpackRemote(string skinName, string archiveName)
+    public static void UnpackRemote(string archiveName)
     {
-        string targetPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "remote", skinName);
-        string zipPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "zips", "remote", $"{archiveName}.zip");
-        
+        string targetPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "remote", archiveName);
+        string zipPath = Path.Combine(
+            Path.GetTempPath(),
+            "ChangeSkin",
+            "zips",
+            "remote",
+            $"{archiveName}.zip"
+        );
+
         if (Directory.Exists(targetPath))
-        Directory.Delete(targetPath, true);
-    
+            Directory.Delete(targetPath, true);
+
         Directory.CreateDirectory(targetPath);
 
-        ZipFile.ExtractToDirectory(
-            zipPath,
-            targetPath
-        );
+        ZipFile.ExtractToDirectory(zipPath, targetPath);
     }
 
     private static void CopyFolderRecuresively(string sourceFolder, string destFolder)
@@ -223,16 +240,16 @@ internal static class SkinLoader
         );
     }
 
-    private static void CreateZip(string path, string skinName)
-    {
-        string outPath;
-        outPath = Path.GetTempPath() + $"/ChangeSkin/{skinName}.zip";
-        if (!Directory.Exists(Path.GetTempPath() + "/ChangeSkin"))
-            Directory.CreateDirectory(Path.GetTempPath() + "/ChangeSkin");
-        if (File.Exists(outPath))
-            File.Delete(outPath);
-        ZipFile.CreateFromDirectory(path, outPath);
-    }
+    // private static void CreateZip(string path, string skinName)
+    // {
+    //     string outPath;
+    //     outPath = Path.GetTempPath() + $"/ChangeSkin/{skinName}.zip";
+    //     if (!Directory.Exists(Path.GetTempPath() + "/ChangeSkin"))
+    //         Directory.CreateDirectory(Path.GetTempPath() + "/ChangeSkin");
+    //     if (File.Exists(outPath))
+    //         File.Delete(outPath);
+    //     ZipFile.CreateFromDirectory(path, outPath);
+    // }
 
     public static void ClearCache()
     {

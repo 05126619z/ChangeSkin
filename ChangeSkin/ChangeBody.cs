@@ -45,18 +45,17 @@ namespace ChangeSkin
             loaded = true;
         }
 
-        public void LoadSkinURL(string url)
-        {
-            LoadSkinURL(url, Utils.GenerateRandomString(10));
-        }
+        // public void LoadSkinURL(string url)
+        // {
+        //     LoadSkinURL(url, Utils.GenerateRandomString(10));
+        // }
 
-        public void LoadSkinURL(string url, string skinName)
+        public void LoadSkinURL(string url)
         {
             if (working)
                 StopReplacement();
             if (loaded)
                 Unload();
-            this.skinName = skinName;
             skinURL = url;
             loaded = false;
             isLocal = false;
@@ -66,7 +65,8 @@ namespace ChangeSkin
                 return;
             }
             string archiveName = SkinLoader.DownloadRemote(url);
-            SkinLoader.UnpackRemote(skinName, archiveName);
+            SkinLoader.UnpackRemote(archiveName);
+            skinName = archiveName;
             textureStorage.newBodySprites = [];
             SkinLoader.LoadSkin(skinName, bodyfilenames, isLocal, ref textureStorage.newBodySprites);
             loadedName = skinName;
@@ -97,7 +97,7 @@ namespace ChangeSkin
 
         public void BeginReplacement()
         {
-            if (!ChangeSkinMonoBehaviour.enabled || isBanned)
+            if (isBanned)
                 return;
             if (skinName == null && skinURL == null)
                 return;

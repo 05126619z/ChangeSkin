@@ -84,7 +84,7 @@ public static class ChangeSkinNetworkComponent
                         reader.ReadValueSafe(out string url);
                         if (clientId != NetworkManager.ServerClientId)
                         {
-                            ChangeSkinMonoBehaviour.replacers[clientId].LoadSkinURL(url, skin);
+                            ChangeSkinMonoBehaviour.replacers[clientId].LoadSkinURL(url);
                         }
                         var writer = new FastBufferWriter(8, Allocator.Temp, 1200);
                         writer.WriteValueSafe(clientId);
@@ -164,7 +164,7 @@ public static class ChangeSkinNetworkComponent
                     {
                         reader.ReadValueSafe(out string skin);
                         reader.ReadValueSafe(out string url);
-                        ChangeSkinMonoBehaviour.replacers[recivedClientId].LoadSkinURL(url, skin);
+                        ChangeSkinMonoBehaviour.replacers[recivedClientId].LoadSkinURL(url);
                         if (Plugin.ModConfig.Verbose)
                         {
                             Plugin.Logger.LogInfo($"PlayerSkinRelay recieved: {skin} + {url}");
