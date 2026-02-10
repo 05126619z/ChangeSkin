@@ -70,8 +70,8 @@ internal static class SkinLoader
                 {
                     Plugin.Logger.LogInfo(dirName);
                 }
-                workPath = dirNames[0];
             }
+            workPath = dirNames[0];
         }
         foreach (string filename in filenames)
         {
