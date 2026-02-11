@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx;
-using KrokoshaCasualtiesMP;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -14,46 +12,16 @@ namespace ChangeSkin;
 
 public class ChangeSkinMonoBehaviour : MonoBehaviour
 {
-    public static PlayerBody localPlayerBody;
     public static Body localBody;
     public static ChangeBody localChangeBody;
-    public static List<PlayerBody> playerBodies = [];
-
-    public static Dictionary<ulong, ChangeBody> replacers = replacers = [];
     public static bool initialized = false;
 
     public static void Init()
     {
         TextureStorage.SaveOGSprites();
-        if (!KrokoshaScavMultiplayer.network_system_is_running)
-        {
-            localBody = PlayerCamera.main.body;
-            localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
-            replacers[0] = localChangeBody;
-            localChangeBody.isLocalChangeBody = true;
-        }
-        else
-        {
-            ChangeSkinNetworkComponent.RegisterServerRecievers();
-            ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (ScavClientInstance scavClientInstance in ScavMultiGlobalSynchronizer.GetAllLivingPlayers())
-            {
-                playerBodies.Add(scavClientInstance.playerbody);
-                ChangeBody changeBody = scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
-                if (changeBody == null)
-                {
-                    changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
-                }
-                ChangeSkinMonoBehaviour.replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
-                if (scavClientInstance == ScavClientInstance.local_scavclientinstance)
-                {
-                    changeBody.isLocalChangeBody = true;
-                    ChangeSkinMonoBehaviour.localChangeBody = changeBody;
-                    ChangeSkinMonoBehaviour.localPlayerBody = scavClientInstance.playerbody;
-                    ChangeSkinMonoBehaviour.localBody = scavClientInstance.body;
-                }
-            }
-        }
+        localBody = PlayerCamera.main.body;
+        localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
+        localChangeBody.isLocalChangeBody = true;
 
         SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
 
@@ -87,9 +55,6 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
     public static void Destructor()
     {
         initialized = false;
-        replacers = [];
-        playerBodies = [];
-        localPlayerBody = null;
         localBody = null;
         localChangeBody = null;
         TextureStorage.ogSprites = [];
@@ -135,7 +100,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             {
                 SkinSelectLocal(localChangeBody, args[3]);
                 Plugin.ModConfig.LastSelectedSkin = args[3];
-                ChangeSkinNetworkComponent.SendLocalSkinMessage(args[3]);
+                Plugin.ModConfig.lastSelected = ModConfig.LastSelected.Local;
                 returnmessage = $"Local skin {args[3]} loaded";
             }
             if (args[2] == "remote")
@@ -148,10 +113,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
                 {
                     SkinSelectRemote(localChangeBody, args[3]);
                     Plugin.ModConfig.LastURL = args[3];
-                    ChangeSkinNetworkComponent.SendRemoteSkinMessage(
-                        args[3],
-                        localChangeBody.skinName
-                    );
+                    Plugin.ModConfig.lastSelected = ModConfig.LastSelected.Remote;
                     returnmessage = $"Remote skin {args[3]} loaded";
                 }
             }
@@ -201,46 +163,9 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             }
         }
 
-        if (command == "ban" && args.Length == 3)
-        {
-            foreach (PlayerBody playerBody in playerBodies)
-            {
-                if (playerBody.name == args[2])
-                {
-                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
-                    changeBody.isBanned = true;
-                    changeBody.Unload();
-                    returnmessage = $"{playerBody.name} is now skinbanned";
-                    break;
-                }
-                else
-                    returnmessage = $"{args[2]} not found";
-            }
-        }
-
-        if (command == "unban" && args.Length == 3)
-        {
-            foreach (PlayerBody playerBody in playerBodies)
-            {
-                if (playerBody.name == args[2])
-                {
-                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
-                    changeBody.isBanned = false;
-                    returnmessage = $"{playerBody.name} is now skinpardoned";
-                    break;
-                }
-                else
-                    returnmessage = $"{args[2]} not found";
-            }
-        }
-
         if (command == "enable")
         {
-            ChangeSkinNetworkComponent.SendSkinEnabled();
-            foreach (ChangeBody changeBody in replacers.Values)
-            {
-                changeBody.BeginReplacement();
-            }
+            localChangeBody.BeginReplacement();
             returnmessage = "ChangeSkin enabled";
             if (Plugin.ModConfig.LastSelectedSkin == null)
                 returnmessage = "Skin for self not selected \notherwise everything is ok";
@@ -248,20 +173,13 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         if (command == "disable")
         {
-            foreach (ChangeBody changeBody in replacers.Values)
-            {
-                changeBody.StopReplacement();
-            }
-            ChangeSkinNetworkComponent.SendSkinDisabled();
+            localChangeBody.StopReplacement();
             returnmessage = "ChangeSkin disabled";
         }
 
         if (command == "reload")
         {
-            foreach (ChangeBody changeBody in replacers.Values)
-            {
-                changeBody.Reload();
-            }
+            localChangeBody.Reload();
             returnmessage = "ChangeSkin reloaded";
         }
 
@@ -290,39 +208,5 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         Plugin.Logger.LogInfo(returnmessage);
         return returnmessage;
-
-        // if (command == "select")
-        // {
-        //     if (args.Length < 3)
-        //         return "Usage: skin select <Folder with skin>";
-
-        //     string skinPath = Paths.PluginPath + "/ChangeSkin/resources" + $"/{args[2]}";
-        //     Plugin.ModConfig.LastSelectedSkin = args[2];
-        //     SkinSelect(localChangeBody, args[2]);
-        //     Plugin.Instance.SaveConfig();
-        //     return Directory.Exists(skinPath) ? $"{args[2]} selected" : $"{args[2]} not found";
-        // }
-
-        // if (Plugin.ModConfig.LastSelectedSkin == null)
-        //     return "Select skin first";
-
-        // if (command == "enable")
-        // {
-        //     ChangeSkinEnable();
-        // }
-
-        // return command switch
-        // {
-        //     "enable" => ExecuteWithConfig(ChangeSkinEnable, "Texture replacement ON"),
-        //     "disable" => ExecuteWithConfig(ChangeSkinDisable, "Texture replacement OFF"),
-        //     "reload" => ExecuteWithConfig(ChangeSkinReload, "Textures reloaded"),
-        //     _ => helpMessage,
-        // };
-    }
-
-    private static string ExecuteWithConfig(Action action, string successMessage)
-    {
-        action();
-        return successMessage;
     }
 }

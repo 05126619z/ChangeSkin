@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using BepInEx;
 using HarmonyLib;
-using KrokoshaCasualtiesMP;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -41,14 +40,26 @@ namespace ChangeSkin
 //         }
 //     }
 
-    [HarmonyPatch(typeof(PlayerBody))]
-    internal class PlayerBody_Patch2
+    [HarmonyPatch(typeof(ConsoleScript))]
+    internal class ConsoleScriptAddCommand
     {
-        [HarmonyPatch(nameof(PlayerBody.OnDestroy))]
-        public static void Prefix(PlayerBody __instance)
+        [HarmonyPatch(nameof(ConsoleScript.RegisterAllCommands))]
+        public static void Postfix()
         {
-            ChangeSkinMonoBehaviour.playerBodies.Remove(__instance);
-            ChangeSkinMonoBehaviour.replacers.Remove(__instance.clientId);
+            ConsoleScript.Commands.Add(
+                new Command(
+                    "skin",
+                    "Control command for ChangeSkin",
+                    delegate(string[] args)
+                    {
+                        string output = ChangeSkinMonoBehaviour.ToggleReplacement(args);
+                        ConsoleScript.instance.LogToConsole(output);
+                        // Plugin.Logger.LogInfo(output);
+                    },
+                    null,
+                    []
+                )
+            );
         }
     }
 }
