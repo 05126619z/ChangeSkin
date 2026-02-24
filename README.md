@@ -1,5 +1,6 @@
 # ChangeSkin - Character Skin Replacement
 Mod support: https://discord.gg/aCBrFPYYjs
+Skins workshop website: https://skin.cat-bot.de/
 ## Description
 This mod allows you to easialy replace skin in Scav without tampering with game files. Now in multiplayer!
 ## Features
