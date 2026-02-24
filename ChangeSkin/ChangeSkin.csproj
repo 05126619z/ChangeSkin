@@ -58,6 +58,10 @@
     <Reference Include="Unity.Networking.Transport">
       <HintPath>redist/Unity.Networking.Transport.dll</HintPath>
     </Reference>
+
+    <Reference Include="OpusSharp.Core">
+      <HintPath>redist/OpusSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

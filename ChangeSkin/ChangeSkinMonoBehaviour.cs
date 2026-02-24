@@ -14,10 +14,10 @@ namespace ChangeSkin;
 
 public class ChangeSkinMonoBehaviour : MonoBehaviour
 {
-    public static PlayerBody localPlayerBody;
+    public static NetBody localPlayerBody;
     public static Body localBody;
     public static ChangeBody localChangeBody;
-    public static List<PlayerBody> playerBodies = [];
+    public static List<NetBody> playerBodies = [];
 
     public static Dictionary<ulong, ChangeBody> replacers = replacers = [];
     public static bool initialized = false;
@@ -36,7 +36,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         {
             ChangeSkinNetworkComponent.RegisterServerRecievers();
             ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (ScavClientInstance scavClientInstance in ScavMultiGlobalSynchronizer.GetAllLivingPlayers())
+            foreach (NetPlayer scavClientInstance in ScavMultiGlobalSynchronizer.GetAllLivingPlayers())
             {
                 playerBodies.Add(scavClientInstance.playerbody);
                 ChangeBody changeBody = scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
@@ -45,7 +45,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
                     changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
                 }
                 ChangeSkinMonoBehaviour.replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
-                if (scavClientInstance == ScavClientInstance.local_scavclientinstance)
+                if (scavClientInstance == NetPlayer.LOCAL_PLAYER)
                 {
                     changeBody.isLocalChangeBody = true;
                     ChangeSkinMonoBehaviour.localChangeBody = changeBody;
@@ -203,7 +203,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         if (command == "ban" && args.Length == 3)
         {
-            foreach (PlayerBody playerBody in playerBodies)
+            foreach (NetBody playerBody in playerBodies)
             {
                 if (playerBody.name == args[2])
                 {
@@ -220,7 +220,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
         if (command == "unban" && args.Length == 3)
         {
-            foreach (PlayerBody playerBody in playerBodies)
+            foreach (NetBody playerBody in playerBodies)
             {
                 if (playerBody.name == args[2])
                 {

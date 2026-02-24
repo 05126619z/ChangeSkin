@@ -41,14 +41,36 @@ namespace ChangeSkin
 //         }
 //     }
 
-    [HarmonyPatch(typeof(PlayerBody))]
-    internal class PlayerBody_Patch2
+    [HarmonyPatch(typeof(NetBody))]
+    internal class NetBody_Patch
     {
-        [HarmonyPatch(nameof(PlayerBody.OnDestroy))]
-        public static void Prefix(PlayerBody __instance)
+        [HarmonyPatch(nameof(NetBody.OnDestroy))]
+        public static void Prefix(NetBody __instance)
         {
             ChangeSkinMonoBehaviour.playerBodies.Remove(__instance);
             ChangeSkinMonoBehaviour.replacers.Remove(__instance.clientId);
+        }
+    }
+    [HarmonyPatch(typeof(ConsoleScript))]
+    internal class ConsoleScriptAddCommand
+    {
+        [HarmonyPatch(nameof(ConsoleScript.RegisterAllCommands))]
+        public static void Postfix()
+        {
+            ConsoleScript.Commands.Add(
+                new Command(
+                    "skin",
+                    "Control command for ChangeSkin",
+                    delegate(string[] args)
+                    {
+                        string output = ChangeSkinMonoBehaviour.ToggleReplacement(args);
+                        ConsoleScript.instance.LogToConsole(output);
+                        // Plugin.Logger.LogInfo(output);
+                    },
+                    null,
+                    []
+                )
+            );
         }
     }
 }

@@ -30,8 +30,8 @@ on:
         default: false
   
 env:
-  GAME_FILE: "14472058"
-  GAME_NAME: "CasualtiesUnknown"
+  GAME_FILE: "16556611"
+  GAME_NAME: "CasualtiesUnknownDemo"
   MOD_NAME: "ChangeSkin"
       
 jobs:
