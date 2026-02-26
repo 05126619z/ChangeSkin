@@ -41,10 +41,35 @@ namespace ChangeSkin
     //         }
     //     }
 
-    [HarmonyPatch(typeof(NetBody))]
-    internal class NetBody_Patch
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.OnFoundNetPlayerInitFinish))]
+    internal class NetBody_Patch_OnFoundNetPlayerInitFinish
     {
-        [HarmonyPatch(nameof(NetBody.OnDestroy))]
+        public static void Postfix(NetBody __instance)
+        {
+            if (
+                !ChangeSkinMain.replacers.ContainsKey(__instance.clientId)
+                && !ChangeSkinMain.playerBodies.Contains(__instance)
+                && ChangeSkinMain.initialized
+            )
+            {
+                ChangeBody changeBody;
+                if (__instance.body.gameObject.GetComponent<ChangeBody>() == null)
+                {
+                    changeBody = __instance.body.gameObject.AddComponent<ChangeBody>();
+                }
+                else
+                {
+                    changeBody = __instance.body.gameObject.GetComponent<ChangeBody>();
+                }
+                ChangeSkinMain.playerBodies.Add(__instance);
+                ChangeSkinMain.replacers.Add(__instance.clientId, changeBody);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.OnDestroy))]
+    internal class NetBody_Patch_OnDestroy
+    {
         public static void Prefix(NetBody __instance)
         {
             ChangeSkinMain.playerBodies.Remove(__instance);

@@ -18,8 +18,7 @@ public static class ChangeSkinMain
     public static Body localBody;
     public static ChangeBody localChangeBody;
     public static List<NetBody> playerBodies = [];
-
-    public static Dictionary<ulong, ChangeBody> replacers = replacers = [];
+    public static Dictionary<ulong, ChangeBody> replacers = [];
     public static bool initialized = false;
 
     public static void Init()
