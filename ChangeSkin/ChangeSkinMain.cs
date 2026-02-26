@@ -269,12 +269,14 @@ public static class ChangeSkinMain
         if (command == "verbose" && args.Length == 3)
         {
             Plugin.ModConfig.Verbose = bool.Parse(args[2]);
+            returnmessage = $"Verbose logging is now {Plugin.ModConfig.Verbose}";
         }
 
         if (command == "init")
         {
             Destructor();
             Init();
+            returnmessage = "ChangeSkin initialized";
         }
 
         Plugin.Logger.LogInfo(returnmessage);

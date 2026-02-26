@@ -52,10 +52,9 @@ namespace ChangeSkin
         }
     }
 
-    [HarmonyPatch(typeof(ConsoleScript))]
-    internal class ConsoleScriptAddCommand
+    [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.RegisterAllCommands))]
+    internal class ConsoleScript_Patch_RegisterAllCommands
     {
-        [HarmonyPatch(nameof(ConsoleScript.RegisterAllCommands))]
         public static void Postfix()
         {
             ConsoleScript.Commands.Add(
@@ -72,6 +71,23 @@ namespace ChangeSkin
                     []
                 )
             );
+        }
+    }
+
+    [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
+    [HarmonyPriority(300)] // Hijack this shit from krok's thing
+    internal class ConsoleScript_Patch_TryExecuteCommand
+    {
+        public static bool Prefix(ConsoleScript __instance, string[] args, bool addToLog)
+        {
+            if (args.Length > 0 && args[0] == "skin")
+            {
+                string output = ChangeSkinMain.ToggleReplacement(args);
+                __instance.LogToConsole(output);
+                __instance.AddCommandToLogAndClearInput();
+                return false;
+            }
+            return true;
         }
     }
 }

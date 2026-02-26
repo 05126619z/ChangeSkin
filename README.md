@@ -4,7 +4,7 @@ Skins workshop website: https://skin.cat-bot.de/
 ## Description
 This mod allows you to easialy replace skin in Scav without tampering with game files. Now in multiplayer!
 ## Features
-<!-- ![Usage Demonstration](https://raw.githubusercontent.com/05126619z/ChangeSkin/refs/heads/master/readme/demonstration_1.gif) -->
+![Usage Demonstration](https://raw.githubusercontent.com/05126619z/ChangeSkin/refs/heads/master/readme/demo.webm)
 <!-- - Changing look of your character in WoundView menu -->
 - Changing skin of your character in main gameplay
 - Hotswapping skins without relaunching the game
