@@ -6,6 +6,7 @@
     <Product>Multiplayer for Scav Prototype aka Casualties: Unknown (WIP)</Product>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);0649</NoWarn>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
 			https://api.nuget.org/v3/index.json;

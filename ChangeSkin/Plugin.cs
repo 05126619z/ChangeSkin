@@ -22,7 +22,6 @@ namespace ChangeSkin
         public static ModConfig ModConfig;
         public static Plugin Instance { get; private set; } = null!;
         public static GameObject SingletonObject;
-        
 
         public void Awake()
         {
@@ -37,9 +36,6 @@ namespace ChangeSkin
             {
                 Logger.LogError(e);
             }
-            SingletonObject = new("ChangeSkinGameObject");
-            SingletonObject.AddComponent<ChangeSkinMonoBehaviour>();
-            DontDestroyOnLoad(SingletonObject);
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
 

@@ -13,6 +13,8 @@ public static class ChangeSkinNetworkComponent
 
     public static void SendLocalSkinMessage(string skinName)
     {
+        if (!KrokoshaScavMultiplayer.network_system_is_running)
+            return;
         string localSkinUrl = ChangeBody.UploadLocalSkin(skinName, uploadApiUrl);
         if (localSkinUrl == null)
             return;
@@ -28,6 +30,8 @@ public static class ChangeSkinNetworkComponent
 
     public static void SendRemoteSkinMessage(string url, string skinName)
     {
+        if (!KrokoshaScavMultiplayer.network_system_is_running)
+            return;
         FastBufferWriter fastBufferWriter = new FastBufferWriter(256, Allocator.Temp, 1200);
         fastBufferWriter.WriteValueSafe(skinName);
         fastBufferWriter.WriteValueSafe(url);
@@ -46,6 +50,8 @@ public static class ChangeSkinNetworkComponent
 
     public static void SendSkinEnabled()
     {
+        if (!KrokoshaScavMultiplayer.network_system_is_running)
+            return;
         var writer = new FastBufferWriter(8, Allocator.Temp, 1200);
         writer.WriteValueSafe(true);
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
@@ -58,6 +64,8 @@ public static class ChangeSkinNetworkComponent
 
     public static void SendSkinDisabled()
     {
+        if (!KrokoshaScavMultiplayer.network_system_is_running)
+            return;
         var writer = new FastBufferWriter(8, Allocator.Temp, 1200);
         writer.WriteValueSafe(false);
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
@@ -74,17 +82,14 @@ public static class ChangeSkinNetworkComponent
             "SkinUpdate",
             (ulong clientId, FastBufferReader reader) =>
             {
-                if (
-                    ChangeSkinMonoBehaviour.initialized
-                    && !ChangeSkinMonoBehaviour.replacers[clientId].isBanned
-                )
+                if (ChangeSkinMain.initialized && !ChangeSkinMain.replacers[clientId].isBanned)
                 {
                     {
                         reader.ReadValueSafe(out string skin);
                         reader.ReadValueSafe(out string url);
                         if (clientId != NetworkManager.ServerClientId)
                         {
-                            ChangeSkinMonoBehaviour.replacers[clientId].LoadSkinURL(url);
+                            ChangeSkinMain.replacers[clientId].LoadSkinURL(url);
                         }
                         var writer = new FastBufferWriter(8, Allocator.Temp, 1200);
                         writer.WriteValueSafe(clientId);
@@ -109,21 +114,18 @@ public static class ChangeSkinNetworkComponent
             "SkinStateUpdate",
             (ulong clientId, FastBufferReader reader) =>
             {
-                if (
-                    ChangeSkinMonoBehaviour.initialized
-                    && !ChangeSkinMonoBehaviour.replacers[clientId].isBanned
-                )
+                if (ChangeSkinMain.initialized && !ChangeSkinMain.replacers[clientId].isBanned)
                 {
                     reader.ReadValueSafe(out bool state);
                     if (clientId != NetworkManager.ServerClientId)
                     {
                         if (state)
                         {
-                            ChangeSkinMonoBehaviour.replacers[clientId].BeginReplacement();
+                            ChangeSkinMain.replacers[clientId].BeginReplacement();
                         }
                         if (!state)
                         {
-                            ChangeSkinMonoBehaviour.replacers[clientId].StopReplacement();
+                            ChangeSkinMain.replacers[clientId].StopReplacement();
                         }
                     }
                     var writer = new FastBufferWriter(8, Allocator.Temp, 1200);
@@ -153,18 +155,18 @@ public static class ChangeSkinNetworkComponent
             {
                 if (clientId != NetworkManager.ServerClientId)
                     return;
-                if (ChangeSkinMonoBehaviour.initialized
+                if (ChangeSkinMain.initialized
                 // && clientId != NetworkManager.ServerClientId
                 )
                 {
                     reader.ReadValueSafe(out ulong recivedClientId);
-                    if (!ChangeSkinMonoBehaviour.replacers[recivedClientId].isBanned
-                    // && recivedClientId != ChangeSkinMonoBehaviour.localPlayerBody.clientId
+                    if (!ChangeSkinMain.replacers[recivedClientId].isBanned
+                    // && recivedClientId != ChangeSkinMain.localPlayerBody.clientId
                     )
                     {
                         reader.ReadValueSafe(out string skin);
                         reader.ReadValueSafe(out string url);
-                        ChangeSkinMonoBehaviour.replacers[recivedClientId].LoadSkinURL(url);
+                        ChangeSkinMain.replacers[recivedClientId].LoadSkinURL(url);
                         if (Plugin.ModConfig.Verbose)
                         {
                             Plugin.Logger.LogInfo($"PlayerSkinRelay recieved: {skin} + {url}");
@@ -177,24 +179,24 @@ public static class ChangeSkinNetworkComponent
             "SkinStateUpdateRelay",
             (ulong clientId, FastBufferReader reader) =>
             {
-                if (ChangeSkinMonoBehaviour.initialized
+                if (ChangeSkinMain.initialized
                 // && clientId != NetworkManager.ServerClientId
                 )
                 {
                     reader.ReadValueSafe(out ulong recivedClientId);
                     reader.ReadValueSafe(out bool state);
                     if (
-                        !ChangeSkinMonoBehaviour.replacers[recivedClientId].isBanned
-                        && recivedClientId != ChangeSkinMonoBehaviour.localPlayerBody.clientId
+                        !ChangeSkinMain.replacers[recivedClientId].isBanned
+                        && recivedClientId != ChangeSkinMain.localPlayerBody.clientId
                     )
                     {
                         if (state)
                         {
-                            ChangeSkinMonoBehaviour.replacers[recivedClientId].BeginReplacement();
+                            ChangeSkinMain.replacers[recivedClientId].BeginReplacement();
                         }
                         if (!state)
                         {
-                            ChangeSkinMonoBehaviour.replacers[recivedClientId].StopReplacement();
+                            ChangeSkinMain.replacers[recivedClientId].StopReplacement();
                         }
                         if (Plugin.ModConfig.Verbose)
                         {

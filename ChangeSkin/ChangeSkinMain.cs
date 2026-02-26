@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace ChangeSkin;
 
-public class ChangeSkinMonoBehaviour : MonoBehaviour
+public static class ChangeSkinMain
 {
     public static NetBody localPlayerBody;
     public static Body localBody;
@@ -38,18 +38,19 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             foreach (NetPlayer scavClientInstance in ServerMain.GetAllLivingPlayers())
             {
                 playerBodies.Add(scavClientInstance.playerbody);
-                ChangeBody changeBody = scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+                ChangeBody changeBody =
+                    scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
                 if (changeBody == null)
                 {
                     changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
                 }
-                ChangeSkinMonoBehaviour.replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
+                replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
                 if (scavClientInstance == NetPlayer.LOCAL_PLAYER)
                 {
                     changeBody.isLocalChangeBody = true;
-                    ChangeSkinMonoBehaviour.localChangeBody = changeBody;
-                    ChangeSkinMonoBehaviour.localPlayerBody = scavClientInstance.playerbody;
-                    ChangeSkinMonoBehaviour.localBody = scavClientInstance.body;
+                    localChangeBody = changeBody;
+                    localPlayerBody = scavClientInstance.playerbody;
+                    localBody = scavClientInstance.body;
                 }
             }
         }
@@ -101,16 +102,6 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
     public static void SkinSelectRemote(ChangeBody changeBody, string url)
     {
         changeBody.LoadSkinURL(url);
-    }
-
-    public static void Startcorout(IEnumerator f)
-    {
-        Plugin.SingletonObject.GetComponent<ChangeSkinMonoBehaviour>().StartCoroutine(f);
-    }
-
-    public static void Stopcorout(IEnumerator f)
-    {
-        Plugin.SingletonObject.GetComponent<ChangeSkinMonoBehaviour>().StopCoroutine(f);
     }
 
     public static string ToggleReplacement(string[] args)
@@ -280,7 +271,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
             Plugin.ModConfig.Verbose = bool.Parse(args[2]);
         }
 
-        if (command == "reinit")
+        if (command == "init")
         {
             Destructor();
             Init();

@@ -40,7 +40,12 @@ namespace ChangeSkin
             this.skinName = skinName;
             isLocal = true;
             textureStorage.newBodySprites = [];
-            SkinLoader.LoadSkin(skinName, bodyfilenames, isLocal, ref textureStorage.newBodySprites);
+            SkinLoader.LoadSkin(
+                skinName,
+                bodyfilenames,
+                isLocal,
+                ref textureStorage.newBodySprites
+            );
             loadedName = skinName;
             loaded = true;
         }
@@ -68,7 +73,12 @@ namespace ChangeSkin
             SkinLoader.UnpackRemote(archiveName);
             skinName = archiveName;
             textureStorage.newBodySprites = [];
-            SkinLoader.LoadSkin(skinName, bodyfilenames, isLocal, ref textureStorage.newBodySprites);
+            SkinLoader.LoadSkin(
+                skinName,
+                bodyfilenames,
+                isLocal,
+                ref textureStorage.newBodySprites
+            );
             loadedName = skinName;
             loaded = true;
         }

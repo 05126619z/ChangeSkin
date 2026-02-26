@@ -1,5 +1,6 @@
 # ChangeSkin - Character Skin Replacement
 Mod support: https://discord.gg/aCBrFPYYjs
+Skins workshop website: https://skin.cat-bot.de/
 ## Description
 This mod allows you to easialy replace skin in Scav without tampering with game files. Now in multiplayer!
 ## Features
@@ -18,7 +19,7 @@ This mod allows you to easialy replace skin in Scav without tampering with game 
 ## Usage
 To use your own skin you have to duplicate and rename the `robot` folder, and replace all the textures in it with the new ones
 
-1. Type `skin reinit` to initialize the mod
+1. Type `skin init` to initialize the mod
 2. Type `skin load local {skinName}` to load skin which you have locally
 3. Type `skin load remote {skinURL}` to load skin from url
 4. Type `skin rule set skinuploading true/false` to allow or disallow your local skin uploading
@@ -29,8 +30,6 @@ To use your own skin you have to duplicate and rename the `robot` folder, and re
 9. Type `skin verbose true/false` to enable verbosity in the console
 10. Type `skin unload` to unload your local skin
 11. Type `skin enable/disable` to enable or disable the mod
-
-
 
 ## Special thanks
 Special thanks to @speed_buump for skin textures and @garythecat for skin portal

@@ -12,37 +12,38 @@ namespace ChangeSkin
     {
         internal Dictionary<string, Sprite> newBodySprites = [];
 
-
         private static Dictionary<string, Sprite> _ogSprites;
-private static readonly object _lock = new object();
+        private static readonly object _lock = new object();
 
-public static Dictionary<string, Sprite> OgSprites
-{
-    get
-    {
-        if (_ogSprites == null) // double-check locking pattern
+        public static Dictionary<string, Sprite> OgSprites
         {
-            lock (_lock)
+            get
             {
                 if (_ogSprites == null)
                 {
-                    SaveOGSprites();
+                    lock (_lock)
+                    {
+                        if (_ogSprites == null)
+                        {
+                            SaveOGSprites();
+                        }
+                    }
                 }
+                return _ogSprites;
             }
         }
-        return _ogSprites;
-    }
-}
 
-        
         private static void SaveOGSprite(string filename)
         {
-            Sprite sprite = Utils.LoadSprite(Paths.PluginPath + $"/ChangeSkin/resources/og/{filename}");
+            Sprite sprite = Utils.LoadSprite(
+                Paths.PluginPath + $"/ChangeSkin/resources/og/{filename}"
+            );
             _ogSprites.Add(sprite.name, sprite);
         }
 
         private static void SaveOGSprites()
         {
+            _ogSprites = [];
             foreach (string filename in ogBodySpriteFilenames)
             {
                 SaveOGSprite(filename);
