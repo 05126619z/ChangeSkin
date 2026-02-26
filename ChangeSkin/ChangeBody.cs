@@ -185,7 +185,7 @@ namespace ChangeSkin
                     continue;
                 }
                 if (
-                    TextureStorage.ogSprites.TryGetValue(
+                    TextureStorage.OgSprites.TryGetValue(
                         spriteRenderer.sprite.name,
                         out Sprite originalSprite
                     )

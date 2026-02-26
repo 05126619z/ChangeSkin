@@ -11,20 +11,41 @@ namespace ChangeSkin
     internal class TextureStorage
     {
         internal Dictionary<string, Sprite> newBodySprites = [];
-        internal static Dictionary<string, Sprite> ogSprites = [];
+
+
+        private static Dictionary<string, Sprite> _ogSprites;
+private static readonly object _lock = new object();
+
+public static Dictionary<string, Sprite> OgSprites
+{
+    get
+    {
+        if (_ogSprites == null) // double-check locking pattern
+        {
+            lock (_lock)
+            {
+                if (_ogSprites == null)
+                {
+                    SaveOGSprites();
+                }
+            }
+        }
+        return _ogSprites;
+    }
+}
 
         
-        internal static void SaveOGSprite(string filename)
+        private static void SaveOGSprite(string filename)
         {
             Sprite sprite = Utils.LoadSprite(Paths.PluginPath + $"/ChangeSkin/resources/og/{filename}");
-            ogSprites.Add(sprite.name, sprite);
+            _ogSprites.Add(sprite.name, sprite);
         }
 
-        internal static void SaveOGSprites()
+        private static void SaveOGSprites()
         {
-            foreach (string filename in TextureStorage.ogBodySpriteFilenames)
+            foreach (string filename in ogBodySpriteFilenames)
             {
-                TextureStorage.SaveOGSprite(filename);
+                SaveOGSprite(filename);
             }
         }
 

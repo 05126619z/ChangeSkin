@@ -24,7 +24,6 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
 
     public static void Init()
     {
-        TextureStorage.SaveOGSprites();
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
             localBody = PlayerCamera.main.body;
@@ -36,7 +35,7 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         {
             ChangeSkinNetworkComponent.RegisterServerRecievers();
             ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (NetPlayer scavClientInstance in ScavMultiGlobalSynchronizer.GetAllLivingPlayers())
+            foreach (NetPlayer scavClientInstance in ServerMain.GetAllLivingPlayers())
             {
                 playerBodies.Add(scavClientInstance.playerbody);
                 ChangeBody changeBody = scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
@@ -92,7 +91,6 @@ public class ChangeSkinMonoBehaviour : MonoBehaviour
         localPlayerBody = null;
         localBody = null;
         localChangeBody = null;
-        TextureStorage.ogSprites = [];
     }
 
     public static void SkinSelectLocal(ChangeBody changeBody, string skinName)

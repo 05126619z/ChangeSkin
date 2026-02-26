@@ -92,7 +92,7 @@ public static class ChangeSkinNetworkComponent
                         writer.WriteValueSafe(url);
                         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
                             "PlayerSkinRelay",
-                            ScavMultiGlobalSynchronizer.AllClientIdsExceptHost,
+                            ServerMain.AllClientIdsExceptHost,
                             writer,
                             NetworkDelivery.Reliable
                         );
@@ -131,7 +131,7 @@ public static class ChangeSkinNetworkComponent
                     writer.WriteValueSafe(state);
                     NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
                         "SkinStateUpdateRelay",
-                        ScavMultiGlobalSynchronizer.AllClientIdsExceptHost,
+                        ServerMain.AllClientIdsExceptHost,
                         writer,
                         NetworkDelivery.Reliable
                     );
