@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BepInEx;
-using KrokoshaCasualtiesMP;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -14,45 +12,46 @@ namespace ChangeSkin;
 
 public static class ChangeSkinMain
 {
-    public static NetBody localPlayerBody;
+    // public static NetBody localPlayerBody;
     public static Body localBody;
     public static ChangeBody localChangeBody;
-    public static List<NetBody> playerBodies = [];
+
+    // public static List<NetBody> playerBodies = [];
     public static Dictionary<ulong, ChangeBody> replacers = [];
     public static bool initialized = false;
 
     public static void Init()
     {
-        if (!KrokoshaScavMultiplayer.network_system_is_running)
-        {
-            localBody = PlayerCamera.main.body;
-            localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
-            replacers[0] = localChangeBody;
-            localChangeBody.isLocalChangeBody = true;
-        }
-        else
-        {
-            ChangeSkinNetworkComponent.RegisterServerRecievers();
-            ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (NetPlayer scavClientInstance in ServerMain.GetAllLivingPlayers())
-            {
-                playerBodies.Add(scavClientInstance.playerbody);
-                ChangeBody changeBody =
-                    scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
-                if (changeBody == null)
-                {
-                    changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
-                }
-                replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
-                if (scavClientInstance == NetPlayer.LOCAL_PLAYER)
-                {
-                    changeBody.isLocalChangeBody = true;
-                    localChangeBody = changeBody;
-                    localPlayerBody = scavClientInstance.playerbody;
-                    localBody = scavClientInstance.body;
-                }
-            }
-        }
+        // if (!KrokoshaScavMultiplayer.network_system_is_running)
+        // {
+        localBody = PlayerCamera.main.body;
+        localChangeBody = localBody.gameObject.AddComponent<ChangeBody>();
+        replacers[0] = localChangeBody;
+        localChangeBody.isLocalChangeBody = true;
+        // }
+        // else
+        // {
+        //     ChangeSkinNetworkComponent.RegisterServerRecievers();
+        //     ChangeSkinNetworkComponent.RegisterClientRecievers();
+        //     foreach (NetPlayer scavClientInstance in ServerMain.GetAllLivingPlayers())
+        //     {
+        //         playerBodies.Add(scavClientInstance.playerbody);
+        //         ChangeBody changeBody =
+        //             scavClientInstance.body.gameObject.GetComponent<ChangeBody>();
+        //         if (changeBody == null)
+        //         {
+        //             changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
+        //         }
+        //         replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
+        //         if (scavClientInstance == NetPlayer.LOCAL_PLAYER)
+        //         {
+        //             changeBody.isLocalChangeBody = true;
+        //             localChangeBody = changeBody;
+        //             localPlayerBody = scavClientInstance.playerbody;
+        //             localBody = scavClientInstance.body;
+        //         }
+        //     }
+        // }
 
         SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
 
@@ -87,8 +86,8 @@ public static class ChangeSkinMain
     {
         initialized = false;
         replacers = [];
-        playerBodies = [];
-        localPlayerBody = null;
+        // playerBodies = [];
+        // localPlayerBody = null;
         localBody = null;
         localChangeBody = null;
     }
@@ -123,7 +122,7 @@ public static class ChangeSkinMain
             {
                 SkinSelectLocal(localChangeBody, args[3]);
                 Plugin.ModConfig.LastSelectedSkin = args[3];
-                ChangeSkinNetworkComponent.SendLocalSkinMessage(args[3]);
+                // ChangeSkinNetworkComponent.SendLocalSkinMessage(args[3]);
                 returnmessage = $"Local skin {args[3]} loaded";
             }
             if (args[2] == "remote")
@@ -136,10 +135,10 @@ public static class ChangeSkinMain
                 {
                     SkinSelectRemote(localChangeBody, args[3]);
                     Plugin.ModConfig.LastURL = args[3];
-                    ChangeSkinNetworkComponent.SendRemoteSkinMessage(
-                        args[3],
-                        localChangeBody.skinName
-                    );
+                    // ChangeSkinNetworkComponent.SendRemoteSkinMessage(
+                    //     args[3],
+                    //     localChangeBody.skinName
+                    // );
                     returnmessage = $"Remote skin {args[3]} loaded";
                 }
             }
@@ -189,42 +188,42 @@ public static class ChangeSkinMain
             }
         }
 
-        if (command == "ban" && args.Length == 3)
-        {
-            foreach (NetBody playerBody in playerBodies)
-            {
-                if (playerBody.name == args[2])
-                {
-                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
-                    changeBody.isBanned = true;
-                    changeBody.Unload();
-                    returnmessage = $"{playerBody.name} is now skinbanned";
-                    break;
-                }
-                else
-                    returnmessage = $"{args[2]} not found";
-            }
-        }
+        // if (command == "ban" && args.Length == 3)
+        // {
+        //     foreach (NetBody playerBody in playerBodies)
+        //     {
+        //         if (playerBody.name == args[2])
+        //         {
+        //             ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
+        //             changeBody.isBanned = true;
+        //             changeBody.Unload();
+        //             returnmessage = $"{playerBody.name} is now skinbanned";
+        //             break;
+        //         }
+        //         else
+        //             returnmessage = $"{args[2]} not found";
+        //     }
+        // }
 
-        if (command == "unban" && args.Length == 3)
-        {
-            foreach (NetBody playerBody in playerBodies)
-            {
-                if (playerBody.name == args[2])
-                {
-                    ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
-                    changeBody.isBanned = false;
-                    returnmessage = $"{playerBody.name} is now skinpardoned";
-                    break;
-                }
-                else
-                    returnmessage = $"{args[2]} not found";
-            }
-        }
+        // if (command == "unban" && args.Length == 3)
+        // {
+        //     foreach (NetBody playerBody in playerBodies)
+        //     {
+        //         if (playerBody.name == args[2])
+        //         {
+        //             ChangeBody changeBody = playerBody.body.gameObject.GetComponent<ChangeBody>();
+        //             changeBody.isBanned = false;
+        //             returnmessage = $"{playerBody.name} is now skinpardoned";
+        //             break;
+        //         }
+        //         else
+        //             returnmessage = $"{args[2]} not found";
+        //     }
+        // }
 
         if (command == "enable")
         {
-            ChangeSkinNetworkComponent.SendSkinEnabled();
+            // ChangeSkinNetworkComponent.SendSkinEnabled();
             foreach (ChangeBody changeBody in replacers.Values)
             {
                 changeBody.BeginReplacement();
@@ -240,7 +239,7 @@ public static class ChangeSkinMain
             {
                 changeBody.StopReplacement();
             }
-            ChangeSkinNetworkComponent.SendSkinDisabled();
+            // ChangeSkinNetworkComponent.SendSkinDisabled();
             returnmessage = "ChangeSkin disabled";
         }
 
